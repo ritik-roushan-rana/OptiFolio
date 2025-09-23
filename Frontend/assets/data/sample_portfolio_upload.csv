@@ -1,0 +1,13 @@
+type,symbol,name,shares,price,value,dayChange,dayChangePct,sector,assetClass,costBasis,totalGain,gainPct,dividendYield,peRatio
+portfolio,,,,,,,,,,,,,,,,,159251,683.75,0.0043,6,2024-06-30
+holding,XOM,Exxon Mobil,140,109.22,15290.80,85.40,0.56,Energy,Equity,13000,2290.80,17.62,3.15,11.4
+holding,JNJ,Johnson & Johnson,90,158.40,14256.00,-72.00,-0.50,Healthcare,Equity,15000,-744.00,-4.96,2.90,15.8
+holding,BAC,Bank of America,300,31.45,9435.00,60.00,0.64,Financials,Equity,8700,735.00,8.45,2.80,9.9
+holding,DIS,Walt Disney Co,120,92.30,11076.00,48.00,0.44,Communication,Equity,13800,-2724.00,-19.74,0.00,38.0
+holding,ORCL,Oracle Corp,110,126.10,13871.00,77.00,0.56,Technology,Equity,10200,3671.00,35.99,1.35,33.2
+holding,CRM,Salesforce Inc,75,210.50,15787.50,132.75,0.85,Technology,Equity,12800,2987.50,23.35,0.00,61.0
+holding,AMD,Advanced Micro Devices,95,162.80,15466.00,-190.00,-1.21,Technology,Equity,14000,1466.00,10.47,0.00,45.5
+holding,LLY,Eli Lilly & Co,25,885.40,22135.00,265.00,1.21,Healthcare,Equity,17000,5135.00,30.21,0.75,79.0
+holding,KO,Coca-Cola Co,180,59.12,10641.60,21.60,0.20,Consumer Staples,Equity,9900,741.60,7.49,3.05,24.1
+holding,COST,Costco Wholesale,40,782.30,31292.00,256.00,0.82,Consumer Staples,Equity,25400,5892.00,23.21,0.70,43.2
+performance,,,,,,,,,,,,,,,"1Y",11,159251,,,,6,2024-06-30
