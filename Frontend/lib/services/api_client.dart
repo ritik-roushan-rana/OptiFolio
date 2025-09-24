@@ -6,7 +6,7 @@ import 'package:flutter/foundation.dart';
 class ApiClient {
   static const String _base = String.fromEnvironment(
     'API_BASE_URL',
-    defaultValue: 'http://localhost:3000',
+    defaultValue: 'http://15.206.217.186:3000',
   );
 
   final AuthService auth;

@@ -18,7 +18,7 @@ class UserSession {
 }
 
 class AuthService with ChangeNotifier {
-  static const _base = 'http://localhost:3000';
+  static const _base = 'http://15.206.217.186:3000';
 
   UserSession? _session;
   UserSession? get currentUser => _session;
