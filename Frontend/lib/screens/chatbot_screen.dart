@@ -3,6 +3,8 @@ import 'package:google_fonts/google_fonts.dart';
 import '../utils/app_colors.dart';
 import '../widgets/gradient_background.dart';
 import 'dart:ui';
+import 'package:http/http.dart' as http;
+import 'dart:convert';
 
 class ChatbotScreen extends StatefulWidget {
   const ChatbotScreen({super.key});
@@ -17,17 +19,49 @@ class _ChatbotScreenState extends State<ChatbotScreen> {
   // Placeholder for chat messages (user and bot)
   final List<Map<String, String>> _messages = [];
 
-  void _sendMessage() {
+  Future<String> getAuthToken() async {
+    return 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZCI6InVzZXJfaWQiLCJpYXQiOjE3NjA3NjM5NTB9.KNM64iyoE06s5__HWfwotjlef3yhS32uYxHCWLi6XA4';
+  }
+
+  void _sendMessage() async {
     if (_messageController.text.isNotEmpty) {
+      final userMessage = _messageController.text.trim();
       setState(() {
-        _messages.insert(0, {'role': 'user', 'text': _messageController.text});
-        // Simulate bot response
-        _messages.insert(0, {
-          'role': 'bot',
-          'text': "🤖 I'm here to help! (Echo): ${_messageController.text}"
-        });
+        _messages.insert(0, {'role': 'user', 'text': userMessage});
         _messageController.clear();
       });
+
+      try {
+        final response = await http.post(
+          Uri.parse('http://15.206.217.186:3000/api/chatbot'), // Updated to use AWS IP
+          headers: {
+            'Content-Type': 'application/json',
+            'Authorization': 'Bearer ${await getAuthToken()}', // Dynamically fetch the token
+          },
+          body: json.encode({'message': userMessage}),
+        );
+
+        if (response.statusCode == 200) {
+          final data = json.decode(response.body);
+          setState(() {
+            _messages.insert(0, {'role': 'bot', 'text': data['reply']});
+          });
+        } else {
+          setState(() {
+            _messages.insert(0, {
+              'role': 'bot',
+              'text': 'Error: Unable to get a response from the server.',
+            });
+          });
+        }
+      } catch (e) {
+        setState(() {
+          _messages.insert(0, {
+            'role': 'bot',
+            'text': 'Error: $e',
+          });
+        });
+      }
     }
   }
 
@@ -91,7 +125,7 @@ class _ChatbotScreenState extends State<ChatbotScreen> {
                                   style: GoogleFonts.inter(
                                     color: isUser
                                         ? Colors.white
-                                        : AppColors.primary,
+                                        : Colors.white,
                                     fontSize: 16,
                                   ),
                                 ),
@@ -172,7 +206,7 @@ class _ChatbotScreenState extends State<ChatbotScreen> {
               ),
               child: TextField(
                 controller: _messageController,
-                style: GoogleFonts.inter(color: Colors.black), // <-- force black text
+                style: GoogleFonts.inter(color: Colors.white),
                 decoration: InputDecoration(
                   hintText: 'Type a message...',
                   hintStyle: GoogleFonts.inter(color: AppColors.mutedText),

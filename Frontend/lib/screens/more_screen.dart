@@ -22,32 +22,33 @@ class MoreScreen extends StatelessWidget {
             const GradientBackground(),
             Padding(
               padding: const EdgeInsets.all(16),
-              child: Column(
-                mainAxisSize: MainAxisSize.min,
-                children: [
-                  Container(
-                    width: 40,
-                    height: 4,
-                    margin: const EdgeInsets.only(bottom: 16),
-                    decoration: BoxDecoration(
-                      color: Colors.white24,
-                      borderRadius: BorderRadius.circular(2),
+              child: SingleChildScrollView(
+                child: Column(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    Container(
+                      width: 40,
+                      height: 4,
+                      margin: const EdgeInsets.only(bottom: 16),
+                      decoration: BoxDecoration(
+                        color: Colors.white24,
+                        borderRadius: BorderRadius.circular(2),
+                      ),
                     ),
-                  ),
-                  const Text(
-                    "More Options",
-                    style: TextStyle(
-                        fontSize: 18,
-                        fontWeight: FontWeight.bold,
-                        color: Colors.white),
-                  ),
-                  const SizedBox(height: 16),
-                  Expanded(
-                    child: GridView.count(
+                    const Text(
+                      "More Options",
+                      style: TextStyle(
+                          fontSize: 18,
+                          fontWeight: FontWeight.bold,
+                          color: Colors.white),
+                    ),
+                    const SizedBox(height: 16),
+                    GridView.count(
                       crossAxisCount: 3,
                       shrinkWrap: true,
                       crossAxisSpacing: 16,
                       mainAxisSpacing: 16,
+                      childAspectRatio: 0.85, // allow taller tiles to fit icon + label
                       physics: const NeverScrollableScrollPhysics(),
                       children: [
                         _buildOption(context, Icons.article, "News", const NewsAlertsScreen()),
@@ -57,8 +58,8 @@ class MoreScreen extends StatelessWidget {
                         _buildOption(context, Icons.favorite, "Wishlist", const WishlistScreen()),
                       ],
                     ),
-                  ),
-                ],
+                  ],
+                ),
               ),
             ),
           ],
@@ -94,6 +95,8 @@ class MoreScreen extends StatelessWidget {
             label,
             style: const TextStyle(color: Colors.white, fontSize: 14),
             textAlign: TextAlign.center,
+            maxLines: 1,
+            overflow: TextOverflow.ellipsis,
           ),
         ],
       ),

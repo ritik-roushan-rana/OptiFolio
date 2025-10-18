@@ -106,7 +106,7 @@ class PortfolioOverviewScreen extends StatelessWidget {
           children: [
             // Header + Timeframe Buttons
             Row(
-              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              // Avoid overflow when many timeframe buttons exist
               children: [
                 Text(
                   'Performance',
@@ -116,10 +116,16 @@ class PortfolioOverviewScreen extends StatelessWidget {
                     color: Colors.white,
                   ),
                 ),
-                Row(
-                  children: availableTimeframes
-                      .map((tf) => _buildTimeButton(tf, appState))
-                      .toList(),
+                const SizedBox(width: 12),
+                Expanded(
+                  child: SingleChildScrollView(
+                    scrollDirection: Axis.horizontal,
+                    child: Row(
+                      children: availableTimeframes
+                          .map((tf) => _buildTimeButton(tf, appState))
+                          .toList(),
+                    ),
+                  ),
                 ),
               ],
             ),

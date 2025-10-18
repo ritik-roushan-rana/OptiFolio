@@ -9,6 +9,7 @@ import 'screens/splash_screen.dart';
 import 'screens/LoginScreen.dart';
 import 'screens/SignUpScreen.dart';
 import 'screens/main_screen.dart';
+import 'screens/chatbot_screen.dart';
 
 void main() {
   WidgetsFlutterBinding.ensureInitialized();
@@ -54,6 +55,7 @@ class MyApp extends StatelessWidget {
               '/login': (context) => const LoginScreen(),
               '/signup': (context) => const SignUpScreen(),
               '/main': (context) => const MainScreen(),
+              '/chatbot': (context) => const ChatbotScreen(),
             },
           );
         },

@@ -1,5 +1,5 @@
 import express from 'express';
-import dotenv from 'dotenv';
+import 'dotenv/config';
 import cors from 'cors';
 import morgan from 'morgan';
 import { connectDB } from './db.js';
@@ -19,8 +19,7 @@ import companyRoutes from './routes/companyRoutes.js';
 import searchRoutes from './routes/searchRoutes.js';
 import backtestRoutes from './routes/backtestRoutes.js';
 import settingsRoutes from './routes/settingsRoutes.js';
-
-dotenv.config();
+import chatbotRoutes from './routes/chatbotRoutes.js';
 
 const app = express();
 app.use(cors());
@@ -59,6 +58,9 @@ app.use('/api/companies', companyRoutes);
 app.use('/api/search', searchRoutes);
 app.use('/api/backtests', backtestRoutes);
 app.use('/api/settings', settingsRoutes);
+
+// Chatbot API Route
+app.use('/api', chatbotRoutes);
 
 app.use((_, res) => res.status(404).json({ message: 'Not found' }));
 

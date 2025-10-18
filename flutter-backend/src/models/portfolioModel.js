@@ -10,7 +10,7 @@ const positionSchema = new mongoose.Schema({
 });
 
 const portfolioSchema = new mongoose.Schema({
-  userId: { type: mongoose.Schema.Types.ObjectId, index: true },
+  userId: { type: String, index: true },
   portfolioName: String,
   description: String,
   positions: [positionSchema],
