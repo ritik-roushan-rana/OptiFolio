@@ -28,15 +28,16 @@ class _ChatbotScreenState extends State<ChatbotScreen> {
       final userMessage = _messageController.text.trim();
       setState(() {
         _messages.insert(0, {'role': 'user', 'text': userMessage});
+        _messages.insert(0, {'role': 'bot', 'text': 'Analyzing data...'}); // Show intermediate feedback as plain text
         _messageController.clear();
       });
 
       try {
         final response = await http.post(
-          Uri.parse('http://15.206.217.186:3000/api/chatbot'), // Changed the API URL to use AWS IP instead of localhost
+          Uri.parse('http://15.206.217.186:3000/api/chatbot'),
           headers: {
             'Content-Type': 'application/json',
-            'Authorization': 'Bearer ${await getAuthToken()}', // Dynamically fetch the token
+            'Authorization': 'Bearer ${await getAuthToken()}',
           },
           body: json.encode({'message': userMessage}),
         );
@@ -44,10 +45,12 @@ class _ChatbotScreenState extends State<ChatbotScreen> {
         if (response.statusCode == 200) {
           final data = json.decode(response.body);
           setState(() {
+            _messages.removeAt(0); // Remove "Analyzing data..."
             _messages.insert(0, {'role': 'bot', 'text': data['reply']});
           });
         } else {
           setState(() {
+            _messages.removeAt(0); // Remove "Analyzing data..."
             _messages.insert(0, {
               'role': 'bot',
               'text': 'Error: Unable to get a response from the server.',
@@ -56,6 +59,7 @@ class _ChatbotScreenState extends State<ChatbotScreen> {
         }
       } catch (e) {
         setState(() {
+          _messages.removeAt(0); // Remove "Analyzing data..."
           _messages.insert(0, {
             'role': 'bot',
             'text': 'Error: $e',

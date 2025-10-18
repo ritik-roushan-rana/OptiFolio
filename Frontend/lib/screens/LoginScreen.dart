@@ -31,6 +31,7 @@ class _LoginScreenState extends State<LoginScreen> {
   }
 
   Future<void> _signIn() async {
+    FocusScope.of(context).unfocus(); // Dismiss the keyboard
     setState(() {
       _isLoading = true;
       _errorMessage = null;
@@ -42,29 +43,23 @@ class _LoginScreenState extends State<LoginScreen> {
         _passwordController.text.trim(),
       );
 
-      if (session != null) {
-        final appState = Provider.of<AppStateProvider>(context, listen: false);
-        // Update app state user info (adjust method signature if different)
-        appState.updateUserInfo(
-          userName: session.fullName ?? 'User',
-          email: session.email,
-          phone: '', // no phone in session; update if you add it
-        );
+      final appState = Provider.of<AppStateProvider>(context, listen: false);
+      // Update app state user info (adjust method signature if different)
+      appState.updateUserInfo(
+        userName: session.fullName ?? 'User',
+        email: session.email,
+        phone: '', // no phone in session; update if you add it
+      );
 
-        final hasPortfolio = await appState.checkForExistingPortfolio();
-        if (mounted) {
-          Navigator.of(context).pushReplacement(
-            MaterialPageRoute(
-              builder: (_) => hasPortfolio
-                  ? const MainScreen()
-                  : const PortfolioSetupScreen(),
-            ),
-          );
-        }
-      } else {
-        setState(() {
-          _errorMessage = 'Login failed. Please check your credentials.';
-        });
+      final hasPortfolio = await appState.checkForExistingPortfolio();
+      if (mounted) {
+        Navigator.of(context).pushReplacement(
+          MaterialPageRoute(
+            builder: (_) => hasPortfolio
+                ? const MainScreen()
+                : const PortfolioSetupScreen(),
+          ),
+        );
       }
     } catch (e) {
       setState(() {
