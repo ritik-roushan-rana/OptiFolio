@@ -58,7 +58,6 @@
     <key>NSMicrophoneUsageDescription</key>
     <string>This app needs access to your microphone to allow you to record and upload audio for your portfolio.</string>
     
-    <!-- Removed Google Maps API Key -->
     <key>CFBundleURLTypes</key>
     <array>
         <dict>
@@ -66,7 +65,7 @@
             <string>Editor</string>
             <key>CFBundleURLSchemes</key>
             <array>
-                <string>com.googleusercontent.apps.274346713610-l4m4sj0lahifg44l31m7p55mi45tvv27</string>
+                <string>com.googleusercontent.apps.512660765981-eov3vfh7rq15uh7jv8uceac2jpdv1tv5</string>
             </array>
         </dict>
     </array>

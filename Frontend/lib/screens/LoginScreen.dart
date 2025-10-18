@@ -4,7 +4,6 @@ import '../services/auth_service.dart';
 import '../providers/app_state_provider.dart';
 import '../utils/app_colors.dart';
 import 'package:google_fonts/google_fonts.dart';
-import 'package:google_sign_in/google_sign_in.dart';
 
 import 'getting_started_page.dart';
 import 'main_screen.dart';
@@ -82,41 +81,10 @@ class _LoginScreenState extends State<LoginScreen> {
     });
 
     try {
-      final GoogleSignIn googleSignIn = GoogleSignIn();
-      final GoogleSignInAccount? googleUser = await googleSignIn.signIn();
-
-      if (googleUser == null) {
-        setState(() {
-          _errorMessage = 'Google Sign-In was canceled.';
-        });
-        return;
-      }
-
-      final GoogleSignInAuthentication googleAuth = await googleUser.authentication;
-      final authService = Provider.of<AuthService>(context, listen: false);
-      final session = await authService.signInWithGoogle(
-        idToken: googleAuth.idToken!,
-        accessToken: googleAuth.accessToken!,
-      );
-
-      final appState = Provider.of<AppStateProvider>(context, listen: false);
-      appState.updateUserInfo(
-        userName: session.displayName ?? 'Google User',
-        email: session.email,
-        phone: '',
-      );
-
-      final hasPortfolio = await appState.checkForExistingPortfolio();
-      if (mounted) {
-        Navigator.of(context).pushReplacement(
-          MaterialPageRoute(
-            builder: (_) => hasPortfolio
-                ? const MainScreen()
-                : const PortfolioSetupScreen(),
-          ),
-        );
-      }
+      // Google Sign-In functionality is currently not implemented.
+      throw Exception('Google Sign-In is not implemented.');
     } catch (e) {
+      print('Error during Google Sign-In: $e'); // Debugging log
       setState(() {
         _errorMessage = e.toString().replaceFirst('Exception: ', '');
       });
