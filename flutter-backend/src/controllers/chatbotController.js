@@ -1,5 +1,4 @@
 import axios from 'axios';
-import fs from 'fs';
 import path from 'path';
 import csvParser from 'csv-parser';
 import { fileURLToPath } from 'url';
@@ -7,43 +6,6 @@ import PortfolioModel from '../models/portfolioModel.js';
 import ChatbotMessage from '../models/chatbotModel.js';
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
-const LOCAL_STORAGE_PATH = path.join(__dirname, '../../localStorage/userData.json');
-
-const saveUserDataLocally = (userId, key, value) => {
-  const timestamp = new Date().toISOString();
-  const data = fs.existsSync(LOCAL_STORAGE_PATH)
-    ? JSON.parse(fs.readFileSync(LOCAL_STORAGE_PATH, 'utf-8'))
-    : {};
-
-  if (!data[userId]) {
-    data[userId] = {};
-  }
-
-  data[userId][key] = { value, timestamp };
-
-  // Clean up data older than 24 hours
-  Object.keys(data).forEach((id) => {
-    Object.keys(data[id]).forEach((key) => {
-      const entryTime = new Date(data[id][key].timestamp);
-      if ((new Date() - entryTime) > 24 * 60 * 60 * 1000) {
-        delete data[id][key];
-      }
-    });
-
-    if (Object.keys(data[id]).length === 0) {
-      delete data[id];
-    }
-  });
-
-  fs.writeFileSync(LOCAL_STORAGE_PATH, JSON.stringify(data, null, 2));
-};
-
-const getUserDataLocally = (userId, key) => {
-  if (!fs.existsSync(LOCAL_STORAGE_PATH)) return null;
-
-  const data = JSON.parse(fs.readFileSync(LOCAL_STORAGE_PATH, 'utf-8'));
-  return data[userId]?.[key]?.value || null;
-};
 
 // Chatbot Controller
 const chatbotController = async (req, res) => {
@@ -64,11 +26,9 @@ const chatbotController = async (req, res) => {
 
     if (message.toLowerCase().includes('my name is')) {
       const name = message.split('my name is')[1].trim();
-      saveUserDataLocally(userId, 'name', name);
       botReply = `Okay, ${name}. Nice to meet you! Is there anything I can help you with today?`;
     } else if (message.toLowerCase().includes('what is my name')) {
-      const name = getUserDataLocally(userId, 'name');
-      botReply = name ? `Your name is ${name}.` : `I don't know your name. You would need to tell me your name.`;
+      botReply = `I don't know your name. You would need to tell me your name.`;
     } else {
       // Call Gemini API with user message only
       const response = await axios.post(

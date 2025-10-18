@@ -9,11 +9,14 @@ class UserSession {
   final String email;
   final String? fullName;
   final String token;
+  final String? displayName; // Added displayName property
+
   UserSession({
     required this.id,
     required this.email,
     required this.token,
     this.fullName,
+    this.displayName, // Initialize displayName
   });
 }
 
@@ -125,9 +128,33 @@ class AuthService with ChangeNotifier {
     return _session!;
   }
 
-  // Optional placeholder (no backend endpoint yet)
-  Future<void> signInWithGoogle() async {
-    throw Exception('Google Sign-In not implemented');
+  Future<UserSession> signInWithGoogle({required String idToken, required String accessToken}) async {
+    final uri = Uri.parse('$_base/api/auth/google-login');
+    final r = await http.post(
+      uri,
+      headers: {'Content-Type': 'application/json'},
+      body: jsonEncode({
+        'idToken': idToken,
+        'accessToken': accessToken,
+      }),
+    );
+
+    if (r.statusCode != 200) {
+      throw Exception(r.body);
+    }
+
+    final data = jsonDecode(r.body);
+    _session = UserSession(
+      id: data['user']['id'],
+      email: data['user']['email'],
+      fullName: data['user']['name'],
+      token: data['token'],
+    );
+
+    await _persist();
+    _authStateController.add(true);
+    notifyListeners();
+    return _session!;
   }
 
   Future<void> signOut() async {
