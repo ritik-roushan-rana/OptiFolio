@@ -10,26 +10,16 @@ const __dirname = path.dirname(fileURLToPath(import.meta.url));
 // Chatbot Controller
 const chatbotController = async (req, res) => {
   try {
+    console.log('ChatbotController invoked');
     const { message } = req.body;
+    console.log('Received message:', message);
 
     if (!message) {
+      console.log('Error: Message is required');
       return res.status(400).json({ error: 'Message is required' });
     }
 
-    if (!req.user || !req.user.id) {
-      return res.status(401).json({ error: 'User authentication is required' });
-    }
-
-    const userId = req.user.id;
-    const portfolio = await PortfolioModel.findOne({ userId });
-
-    if (!portfolio) {
-      return res.status(404).json({ error: 'Portfolio not found' });
-    }
-
-    console.log('Portfolio Data:', portfolio);
-
-    // Call Gemini API with portfolio data
+    // Call Gemini API with user message only
     const response = await axios.post(
       'https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent',
       {
@@ -37,7 +27,7 @@ const chatbotController = async (req, res) => {
           {
             parts: [
               {
-                text: `User Message: ${message}\nPortfolio Context: ${JSON.stringify(portfolio)}`,
+                text: `User Message: ${message}`,
               },
             ],
           },
@@ -57,9 +47,11 @@ const chatbotController = async (req, res) => {
     const botReply = response.data.candidates?.[0]?.content?.parts?.[0]?.text || 'No reply available';
 
     if (!botReply) {
+      console.log('Error: Failed to retrieve a reply from the Gemini API');
       return res.status(500).json({ error: 'Failed to retrieve a reply from the Gemini API.' });
     }
 
+    console.log('Bot Reply:', botReply);
     res.status(200).json({ reply: botReply });
   } catch (error) {
     console.error('Error in chatbotController:', error);
