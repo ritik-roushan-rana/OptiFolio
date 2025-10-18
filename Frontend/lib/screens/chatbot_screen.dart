@@ -33,7 +33,7 @@ class _ChatbotScreenState extends State<ChatbotScreen> {
 
       try {
         final response = await http.post(
-          Uri.parse('http://15.206.217.186:3000/api/chatbot'), // Updated to use AWS IP
+          Uri.parse('http://15.206.217.186:3000/api/chatbot'), // Changed the API URL to use AWS IP instead of localhost
           headers: {
             'Content-Type': 'application/json',
             'Authorization': 'Bearer ${await getAuthToken()}', // Dynamically fetch the token
