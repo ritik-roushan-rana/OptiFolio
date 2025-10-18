@@ -206,12 +206,3 @@ npm test
 - Offline caching layer
 - Theming persistence
 
----
-
-## License
-Internal / Proprietary (adjust as needed).
-
----
-
-## Credits
-Developed by FinTech Labs.
