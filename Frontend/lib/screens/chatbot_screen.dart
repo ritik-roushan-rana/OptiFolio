@@ -20,7 +20,7 @@ class _ChatbotScreenState extends State<ChatbotScreen> {
   final List<Map<String, String>> _messages = [];
 
   Future<String> getAuthToken() async {
-    return 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZCI6InVzZXJfaWQiLCJpYXQiOjE3NjA3NjM5NTB9.KNM64iyoE06s5__HWfwotjlef3yhS32uYxHCWLi6XA4';
+    return 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZCI6IjY4ZDQxMGEyZWExMWE0MTQxNjk5NWIyZiIsImlhdCI6MTc2MDc2NzQyMSwiZXhwIjoxNzYwNzcxMDIxfQ.8Qffa2E3NtX-lrE0pdwhE3FbHfKooYR1m8MrgWluybw';
   }
 
   void _sendMessage() async {
