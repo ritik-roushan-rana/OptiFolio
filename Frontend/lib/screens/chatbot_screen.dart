@@ -1,7 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
+import 'package:provider/provider.dart';
 import '../utils/app_colors.dart';
 import '../widgets/gradient_background.dart';
+import '../services/auth_service.dart';
 import 'dart:ui';
 import 'package:http/http.dart' as http;
 import 'dart:convert';
@@ -19,10 +21,6 @@ class _ChatbotScreenState extends State<ChatbotScreen> {
   // Placeholder for chat messages (user and bot)
   final List<Map<String, String>> _messages = [];
 
-  Future<String> getAuthToken() async {
-    return 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZCI6IjY4ZDQxMGEyZWExMWE0MTQxNjk5NWIyZiIsImlhdCI6MTc2MDc2NzQyMSwiZXhwIjoxNzYwNzcxMDIxfQ.8Qffa2E3NtX-lrE0pdwhE3FbHfKooYR1m8MrgWluybw';
-  }
-
   void _sendMessage() async {
     if (_messageController.text.isNotEmpty) {
       final userMessage = _messageController.text.trim();
@@ -33,11 +31,26 @@ class _ChatbotScreenState extends State<ChatbotScreen> {
       });
 
       try {
+        // Get the current token from AuthService
+        final authService = Provider.of<AuthService>(context, listen: false);
+        final token = authService.token;
+        
+        if (token == null) {
+          setState(() {
+            _messages.removeAt(0);
+            _messages.insert(0, {
+              'role': 'bot',
+              'text': 'Error: Please log in to use the chatbot.',
+            });
+          });
+          return;
+        }
+
         final response = await http.post(
           Uri.parse('http://15.206.217.186:3000/api/chatbot'),
           headers: {
             'Content-Type': 'application/json',
-            'Authorization': 'Bearer ${await getAuthToken()}',
+            'Authorization': 'Bearer $token',
           },
           body: json.encode({'message': userMessage}),
         );
@@ -53,7 +66,7 @@ class _ChatbotScreenState extends State<ChatbotScreen> {
             _messages.removeAt(0); // Remove "Analyzing data..."
             _messages.insert(0, {
               'role': 'bot',
-              'text': 'Error: Unable to get a response from the server.',
+              'text': 'Error: Unable to get a response from the server. Status: ${response.statusCode}',
             });
           });
         }

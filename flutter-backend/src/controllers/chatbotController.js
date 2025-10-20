@@ -21,9 +21,6 @@ const chatbotController = async (req, res) => {
       return res.status(400).json({ error: 'Message is required' });
     }
 
-    // Send an intermediate response to indicate processing
-    res.status(200).json({ reply: 'Analyzing data...' });
-
     let botReply;
 
     if (message.toLowerCase().includes('my name is')) {
