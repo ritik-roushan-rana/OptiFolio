@@ -5,8 +5,8 @@ import User from '../models/userModel.js';
 function signToken(user) {
   return jwt.sign(
     { id: user._id, email: user.email },
-    process.env.JWT_SECRET || 'dev_secret',
-    { expiresIn: '7d' }
+    process.env.JWT_SECRET,
+    { expiresIn: '1h' }
   );
 }
 

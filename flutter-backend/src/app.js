@@ -4,6 +4,12 @@ import cors from 'cors';
 import morgan from 'morgan';
 import { connectDB } from './db.js';
 
+// Debug environment variables
+console.log('Environment variables loaded:');
+console.log('JWT_SECRET:', process.env.JWT_SECRET ? `${process.env.JWT_SECRET.slice(0, 10)}...` : 'NOT SET');
+console.log('MONGODB_URI:', process.env.MONGODB_URI ? 'SET' : 'NOT SET');
+console.log('GEMINI_API_KEY:', process.env.GEMINI_API_KEY ? 'SET' : 'NOT SET');
+
 import authRoutes from './routes/authRoutes.js';
 import portfolioRoutes from './routes/portfolioRoutes.js';
 import insightRoutes from './routes/insightRoutes.js';

@@ -11,12 +11,14 @@ const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const chatbotController = async (req, res) => {
   try {
     console.log('ChatbotController invoked');
-    const { message, userId } = req.body;
+    const { message } = req.body;
+    const userId = req.user?.id; // Extract userId from verified JWT token
     console.log('Received message:', message);
+    console.log('User ID from token:', userId);
 
-    if (!message || !userId) {
-      console.log('Error: Message and userId are required');
-      return res.status(400).json({ error: 'Message and userId are required' });
+    if (!message) {
+      console.log('Error: Message is required');
+      return res.status(400).json({ error: 'Message is required' });
     }
 
     // Send an intermediate response to indicate processing
