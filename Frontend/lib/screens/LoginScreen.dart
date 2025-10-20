@@ -75,16 +75,36 @@ class _LoginScreenState extends State<LoginScreen> {
   }
 
   Future<void> _signInWithGoogle() async {
+    FocusScope.of(context).unfocus(); // Dismiss the keyboard
     setState(() {
       _isLoading = true;
       _errorMessage = null;
     });
 
     try {
-      // Google Sign-In functionality is currently not implemented.
-      throw Exception('Google Sign-In is not implemented.');
+      final authService = Provider.of<AuthService>(context, listen: false);
+      final session = await authService.signInWithGoogleAccount();
+
+      final appState = Provider.of<AppStateProvider>(context, listen: false);
+      // Update app state user info
+      appState.updateUserInfo(
+        userName: session.fullName ?? 'User',
+        email: session.email,
+        phone: '', // no phone in session; update if you add it
+      );
+
+      final hasPortfolio = await appState.checkForExistingPortfolio();
+      if (mounted) {
+        Navigator.of(context).pushReplacement(
+          MaterialPageRoute(
+            builder: (_) => hasPortfolio
+                ? const MainScreen()
+                : const PortfolioSetupScreen(),
+          ),
+        );
+      }
     } catch (e) {
-      print('Error during Google Sign-In: $e'); // Debugging log
+      print('Error during Google Sign-In: $e');
       setState(() {
         _errorMessage = e.toString().replaceFirst('Exception: ', '');
       });

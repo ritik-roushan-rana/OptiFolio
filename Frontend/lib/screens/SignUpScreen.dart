@@ -1,8 +1,11 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import '../services/auth_service.dart';
+import '../providers/app_state_provider.dart';
 import '../utils/app_colors.dart';
 import 'package:google_fonts/google_fonts.dart';
+import 'main_screen.dart';
+import 'portfolio_setup_screen.dart';
 
 class SignUpScreen extends StatefulWidget {
   const SignUpScreen({super.key});
@@ -67,6 +70,49 @@ class _SignUpScreenState extends State<SignUpScreen> {
       setState(() {
         _isLoading = false;
       });
+    }
+  }
+
+  Future<void> _signUpWithGoogle() async {
+    FocusScope.of(context).unfocus(); // Dismiss the keyboard
+    setState(() {
+      _isLoading = true;
+      _errorMessage = null;
+    });
+
+    try {
+      final authService = Provider.of<AuthService>(context, listen: false);
+      final session = await authService.signInWithGoogleAccount();
+
+      final appState = Provider.of<AppStateProvider>(context, listen: false);
+      // Update app state user info
+      appState.updateUserInfo(
+        userName: session.fullName ?? 'User',
+        email: session.email,
+        phone: '', // no phone in session; update if you add it
+      );
+
+      final hasPortfolio = await appState.checkForExistingPortfolio();
+      if (mounted) {
+        Navigator.of(context).pushReplacement(
+          MaterialPageRoute(
+            builder: (_) => hasPortfolio
+                ? const MainScreen()
+                : const PortfolioSetupScreen(),
+          ),
+        );
+      }
+    } catch (e) {
+      print('Error during Google Sign-Up: $e');
+      setState(() {
+        _errorMessage = e.toString().replaceFirst('Exception: ', '');
+      });
+    } finally {
+      if (mounted) {
+        setState(() {
+          _isLoading = false;
+        });
+      }
     }
   }
 
@@ -246,7 +292,7 @@ class _SignUpScreenState extends State<SignUpScreen> {
               SizedBox(
                 width: double.infinity,
                 child: OutlinedButton.icon(
-                  onPressed: () {},
+                  onPressed: _isLoading ? null : _signUpWithGoogle,
                   icon: Image.asset('assets/images/google_logo.png', height: 24),
                   label: Text(
                     'Sign up with Google',

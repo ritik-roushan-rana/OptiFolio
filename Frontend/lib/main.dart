@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
+import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'providers/theme_provider.dart';
 import 'providers/app_state_provider.dart';
 import 'services/auth_service.dart';
@@ -11,8 +12,12 @@ import 'screens/SignUpScreen.dart';
 import 'screens/main_screen.dart';
 import 'screens/chatbot_screen.dart';
 
-void main() {
+void main() async {
   WidgetsFlutterBinding.ensureInitialized();
+  
+  // Load environment variables
+  await dotenv.load(fileName: ".env");
+  
   runApp(const MyApp());
 }
 

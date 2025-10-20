@@ -1,8 +1,11 @@
 import 'dart:async';
 import 'dart:convert';
+import 'dart:io';
 import 'package:flutter/foundation.dart';
 import 'package:http/http.dart' as http;
 import 'package:shared_preferences/shared_preferences.dart';
+import 'package:google_sign_in/google_sign_in.dart';
+import 'package:flutter_dotenv/flutter_dotenv.dart';
 
 class UserSession {
   final String id;
@@ -34,8 +37,30 @@ class AuthService with ChangeNotifier {
       StreamController<bool>.broadcast();
   Stream<bool> get onAuthStateChange => _authStateController.stream;
 
+  late final GoogleSignIn _googleSignIn;
+
   AuthService() {
+    _initializeGoogleSignIn();
     _restore();
+  }
+
+  void _initializeGoogleSignIn() {
+    // Get client IDs from environment variables
+    final iosClientId = dotenv.env['IOS_CLIENT_ID'];
+    final webClientId = dotenv.env['WEB_CLIENT_ID'];
+
+    if (kDebugMode) {
+      print('iOS Client ID: $iosClientId');
+      print('Web Client ID: $webClientId');
+    }
+
+    _googleSignIn = GoogleSignIn(
+      clientId: Platform.isIOS ? iosClientId : webClientId,
+      scopes: [
+        'email',
+        'profile',
+      ],
+    );
   }
 
   Future<void> _restore() async {
@@ -128,6 +153,34 @@ class AuthService with ChangeNotifier {
     return _session!;
   }
 
+  Future<UserSession> signInWithGoogleAccount() async {
+    try {
+      // Sign in with Google
+      final GoogleSignInAccount? googleUser = await _googleSignIn.signIn();
+      if (googleUser == null) {
+        throw Exception('Google Sign-In was cancelled by user');
+      }
+
+      // Get authentication tokens
+      final GoogleSignInAuthentication googleAuth = await googleUser.authentication;
+      
+      if (googleAuth.idToken == null || googleAuth.accessToken == null) {
+        throw Exception('Failed to get Google authentication tokens');
+      }
+
+      // Call the existing signInWithGoogle method
+      return await signInWithGoogle(
+        idToken: googleAuth.idToken!,
+        accessToken: googleAuth.accessToken!,
+      );
+    } catch (e) {
+      if (kDebugMode) {
+        print('Google Sign-In Error: $e');
+      }
+      rethrow;
+    }
+  }
+
   Future<UserSession> signInWithGoogle({required String idToken, required String accessToken}) async {
     final uri = Uri.parse('$_base/api/auth/google-login');
     final r = await http.post(
@@ -160,6 +213,16 @@ class AuthService with ChangeNotifier {
   Future<void> signOut() async {
     _session = null;
     await _persist();
+    
+    // Also sign out from Google
+    try {
+      await _googleSignIn.signOut();
+    } catch (e) {
+      if (kDebugMode) {
+        print('Google Sign-Out Error: $e');
+      }
+    }
+    
     _authStateController.add(false);
     notifyListeners();
   }
