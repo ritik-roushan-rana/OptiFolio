@@ -43,6 +43,21 @@ class _NewsAlertsScreenState extends State<NewsAlertsScreen>
     super.dispose();
   }
 
+  String _formatTime(DateTime date) {
+    final now = DateTime.now();
+    final difference = now.difference(date);
+    
+    if (difference.inDays > 0) {
+      return '${difference.inDays}d ago';
+    } else if (difference.inHours > 0) {
+      return '${difference.inHours}h ago';
+    } else if (difference.inMinutes > 0) {
+      return '${difference.inMinutes}m ago';
+    } else {
+      return 'Now';
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -74,12 +89,15 @@ class _NewsAlertsScreenState extends State<NewsAlertsScreen>
       body: Stack(
         children: [
           const GradientBackground(),
-          TabBarView(
-            controller: _tabController,
-            children: [
-              _buildNewsTab(curatedNewsFuture),
-              _buildNewsTab(smartAlertsFuture),
-            ],
+          Padding(
+            padding: const EdgeInsets.only(top: 155), // Add padding to avoid header overlap
+            child: TabBarView(
+              controller: _tabController,
+              children: [
+                _buildNewsTab(curatedNewsFuture),
+                _buildNewsTab(smartAlertsFuture),
+              ],
+            ),
           ),
         ],
       ),
@@ -114,8 +132,9 @@ class _NewsAlertsScreenState extends State<NewsAlertsScreen>
         return Center(
           child: Container(
             constraints: const BoxConstraints(maxWidth: 428),
-            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 16),
+            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
             child: ListView.separated(
+              padding: EdgeInsets.zero,
               itemCount: newsList.length,
               separatorBuilder: (_, __) => const SizedBox(height: 12),
               itemBuilder: (context, index) {
@@ -130,45 +149,91 @@ class _NewsAlertsScreenState extends State<NewsAlertsScreen>
                       ),
                     );
                   },
-                  child: Column(
+                  child: Row(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      Text(
-                        news.title,
-                        style: const TextStyle(
-                          color: Colors.white,
-                          fontSize: 16,
-                          fontWeight: FontWeight.w600,
-                        ),
-                      ),
-                      const SizedBox(height: 8),
-                      Text(
-                        news.description,
-                        style: const TextStyle(
-                          color: AppColors.mutedText,
-                          fontSize: 14,
-                        ),
-                      ),
-                      const SizedBox(height: 12),
-                      Row(
-                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                        children: [
-                          Text(
-                            news.category,
-                            style: const TextStyle(
-                              color: AppColors.primary,
-                              fontWeight: FontWeight.w500,
-                              fontSize: 12,
+                      // News Image (if available)
+                      if (news.imageUrl.isNotEmpty)
+                        Container(
+                          width: 80,
+                          height: 80,
+                          margin: const EdgeInsets.only(right: 12),
+                          decoration: BoxDecoration(
+                            borderRadius: BorderRadius.circular(8),
+                            image: DecorationImage(
+                              image: NetworkImage(news.imageUrl),
+                              fit: BoxFit.cover,
+                              onError: (exception, stackTrace) {
+                                // Handle image loading error silently
+                              },
                             ),
                           ),
-                          Text(
-                            "${news.date.hour}:${news.date.minute.toString().padLeft(2, '0')}",
-                            style: const TextStyle(
-                              color: AppColors.mutedText,
-                              fontSize: 12,
+                        ),
+                      
+                      // News content
+                      Expanded(
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Text(
+                              news.title,
+                              style: const TextStyle(
+                                color: Colors.white,
+                                fontSize: 16,
+                                fontWeight: FontWeight.w600,
+                              ),
+                              maxLines: 2,
+                              overflow: TextOverflow.ellipsis,
                             ),
-                          ),
-                        ],
+                            const SizedBox(height: 8),
+                            Text(
+                              news.description,
+                              style: const TextStyle(
+                                color: AppColors.mutedText,
+                                fontSize: 14,
+                                height: 1.3,
+                              ),
+                              maxLines: 3,
+                              overflow: TextOverflow.ellipsis,
+                            ),
+                            const SizedBox(height: 12),
+                            Row(
+                              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                              children: [
+                                Expanded(
+                                  child: Row(
+                                    children: [
+                                      Text(
+                                        news.source.toUpperCase(),
+                                        style: const TextStyle(
+                                          color: AppColors.primary,
+                                          fontWeight: FontWeight.w600,
+                                          fontSize: 11,
+                                        ),
+                                      ),
+                                      const SizedBox(width: 8),
+                                      Text(
+                                        news.category.toUpperCase(),
+                                        style: const TextStyle(
+                                          color: AppColors.mutedText,
+                                          fontWeight: FontWeight.w500,
+                                          fontSize: 11,
+                                        ),
+                                      ),
+                                    ],
+                                  ),
+                                ),
+                                Text(
+                                  _formatTime(news.date),
+                                  style: const TextStyle(
+                                    color: AppColors.mutedText,
+                                    fontSize: 12,
+                                  ),
+                                ),
+                              ],
+                            ),
+                          ],
+                        ),
                       ),
                     ],
                   ),

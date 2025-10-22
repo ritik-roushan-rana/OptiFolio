@@ -24,7 +24,7 @@ class UserSession {
 }
 
 class AuthService with ChangeNotifier {
-  static const _base = 'http://15.206.217.186:3000';
+  static String get _base => dotenv.env['API_BASE_URL'] ?? 'http://15.206.217.186:3000';
 
   UserSession? _session;
   UserSession? get currentUser => _session;

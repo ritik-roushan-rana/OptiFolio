@@ -51,6 +51,15 @@
     <key>LSSupportsOpeningDocumentsInPlace</key>
     <true/>
     
+    <key>LSApplicationQueriesSchemes</key>
+    <array>
+        <string>https</string>
+        <string>http</string>
+        <string>safari</string>
+        <string>googlechrome</string>
+        <string>firefox</string>
+    </array>
+    
     <key>NSPhotoLibraryUsageDescription</key>
     <string>This app needs access to your photos to allow you to upload images for your portfolio.</string>
     <key>NSCameraUsageDescription</key>

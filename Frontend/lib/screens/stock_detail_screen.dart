@@ -3,13 +3,16 @@ import 'package:google_fonts/google_fonts.dart';
 import 'package:provider/provider.dart';
 import '../models/search_result_model.dart';
 import '../models/stock_data_model.dart';
+import '../models/news_model.dart';
 import '../utils/app_colors.dart';
 import '../widgets/gradient_background.dart';
 import '../services/stock_data_service.dart';
+import '../services/news_service.dart';
 import '../widgets/elevated_card.dart';
 import '../widgets/stock_chart_widget.dart';
 import '../providers/app_state_provider.dart';
 import '../services/auth_service.dart';
+import '../screens/NewsDetailScreen.dart';
 
 class StockDetailScreen extends StatefulWidget {
   final SearchResult stock;
@@ -23,6 +26,7 @@ class StockDetailScreen extends StatefulWidget {
 class _StockDetailScreenState extends State<StockDetailScreen>
     with SingleTickerProviderStateMixin {
   late StockDataService _stockDataService;
+  late NewsService _newsService;
   late TabController _tabController;
 
   StockQuote? _stockQuote;
@@ -31,47 +35,76 @@ class _StockDetailScreenState extends State<StockDetailScreen>
   StockFundamentals? _stockFundamentals;
   TechnicalData? _technicalData;
   DerivativesData? _derivativesData;
+  List<NewsItem>? _companyNews;
   bool _isLoading = true;
+  bool _isLoadingSecondaryData = true;
 
   @override
   void initState() {
     super.initState();
     final auth = context.read<AuthService>();
     _stockDataService = StockDataService(auth);
-    _tabController = TabController(length: 4, vsync: this);
-    _fetchStockData();
+    _newsService = NewsService(auth);
+    _tabController = TabController(length: 5, vsync: this); // Changed to 5 tabs
+    _fetchEssentialData();
+    _fetchSecondaryData();
   }
 
-  Future<void> _fetchStockData() async {
+  // Fetch essential data first (quote + profile) to show basic info quickly
+  Future<void> _fetchEssentialData() async {
     try {
-      final quote = await _stockDataService.fetchQuote(widget.stock.symbol);
-      final profile =
-          await _stockDataService.fetchCompanyProfile(widget.stock.symbol);
-      final historical =
-          await _stockDataService.fetchHistoricalData(widget.stock.symbol, 'D');
-      final fundamentals =
-          await _stockDataService.fetchFundamentals(widget.stock.symbol);
-      final technical =
-          await _stockDataService.fetchTechnicalData(widget.stock.symbol);
-      final derivatives =
-          await _stockDataService.fetchDerivativesData(widget.stock.symbol);
+      // Fetch essential data concurrently for faster loading
+      final results = await Future.wait([
+        _stockDataService.fetchQuote(widget.stock.symbol),
+        _stockDataService.fetchCompanyProfile(widget.stock.symbol),
+      ]);
 
-      setState(() {
-        _stockQuote = StockQuote.fromJson(quote);
-        _companyProfile = CompanyProfile.fromJson(profile);
-        _historicalData = historical
-            .map((json) => HistoricalDataPoint.fromJson(json))
-            .toList();
-        _stockFundamentals = StockFundamentals.fromJson(fundamentals);
-        _technicalData = TechnicalData.fromJson(technical);
-        _derivativesData = DerivativesData.fromJson(derivatives);
-        _isLoading = false;
-      });
+      if (mounted) {
+        setState(() {
+          _stockQuote = StockQuote.fromJson(results[0]);
+          _companyProfile = CompanyProfile.fromJson(results[1]);
+          _isLoading = false; // Show basic UI immediately
+        });
+      }
     } catch (e) {
-      print('Error fetching stock data: $e');
-      setState(() {
-        _isLoading = false;
-      });
+      if (mounted) {
+        setState(() {
+          _isLoading = false;
+        });
+      }
+    }
+  }
+
+  // Fetch secondary data in background
+  Future<void> _fetchSecondaryData() async {
+    try {
+      // Fetch all secondary data concurrently
+      final results = await Future.wait([
+        _stockDataService.fetchHistoricalData(widget.stock.symbol, 'D'),
+        _stockDataService.fetchFundamentals(widget.stock.symbol),
+        _stockDataService.fetchTechnicalData(widget.stock.symbol),
+        _stockDataService.fetchDerivativesData(widget.stock.symbol),
+        _newsService.getCompanyNews(widget.stock.symbol),
+      ]);
+
+      if (mounted) {
+        setState(() {
+          _historicalData = (results[0] as List)
+              .map((json) => HistoricalDataPoint.fromJson(json as Map<String, dynamic>))
+              .toList();
+          _stockFundamentals = StockFundamentals.fromJson(results[1] as Map<String, dynamic>);
+          _technicalData = TechnicalData.fromJson(results[2] as Map<String, dynamic>);
+          _derivativesData = DerivativesData.fromJson(results[3] as Map<String, dynamic>);
+          _companyNews = results[4] as List<NewsItem>;
+          _isLoadingSecondaryData = false;
+        });
+      }
+    } catch (e) {
+      if (mounted) {
+        setState(() {
+          _isLoadingSecondaryData = false;
+        });
+      }
     }
   }
 
@@ -110,6 +143,7 @@ class _StockDetailScreenState extends State<StockDetailScreen>
                                 _buildTechnicalTab(),
                                 _buildDerivativesTab(),
                                 _buildFundamentalsTab(),
+                                _buildNewsTab(),
                               ],
                             ),
                           ),
@@ -253,6 +287,7 @@ Widget _buildTabBar() {
         Tab(text: 'Technical'),
         Tab(text: 'Derivative'),
         Tab(text: 'Fundamentals'),
+        Tab(text: 'News'),
       ],
     ),
   );
@@ -275,7 +310,11 @@ Widget _buildTabBar() {
           const SizedBox(height: 12),
           SizedBox(
             height: 250,
-            child: StockChartWidget(historicalData: _historicalData ?? []),
+            child: _isLoadingSecondaryData
+                ? const Center(
+                    child: CircularProgressIndicator(color: AppColors.primary),
+                  )
+                : StockChartWidget(historicalData: _historicalData ?? []),
           ),
         ],
       ),
@@ -283,8 +322,10 @@ Widget _buildTabBar() {
   }
 
   Widget _buildTechnicalTab() {
-    if (_technicalData == null) {
-      return const Center(child: CircularProgressIndicator());
+    if (_isLoadingSecondaryData || _technicalData == null) {
+      return const Center(
+        child: CircularProgressIndicator(color: AppColors.primary),
+      );
     }
     return SingleChildScrollView(
       child: Column(
@@ -319,7 +360,9 @@ Widget _buildTabBar() {
 
   Widget _buildDerivativesTab() {
     if (_derivativesData == null) {
-      return const Center(child: CircularProgressIndicator());
+      return const Center(
+        child: CircularProgressIndicator(color: AppColors.primary),
+      );
     }
     return SingleChildScrollView(
       child: Column(
@@ -353,8 +396,10 @@ Widget _buildTabBar() {
   }
 
   Widget _buildFundamentalsTab() {
-    if (_stockFundamentals == null) {
-      return const Center(child: CircularProgressIndicator());
+    if (_isLoadingSecondaryData || _stockFundamentals == null) {
+      return const Center(
+        child: CircularProgressIndicator(color: AppColors.primary),
+      );
     }
     return SingleChildScrollView(
       child: Column(
@@ -528,6 +573,169 @@ Widget _buildTabBar() {
         ),
       ),
     );
+  }
+
+  Widget _buildNewsTab() {
+    if (_isLoadingSecondaryData || _companyNews == null) {
+      return const Center(
+        child: CircularProgressIndicator(color: AppColors.primary),
+      );
+    }
+
+    if (_companyNews!.isEmpty) {
+      return Center(
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            Icon(
+              Icons.article_outlined,
+              size: 64,
+              color: AppColors.mutedText,
+            ),
+            const SizedBox(height: 16),
+            Text(
+              'No recent news available',
+              style: GoogleFonts.inter(
+                color: AppColors.mutedText,
+                fontSize: 16,
+              ),
+            ),
+            const SizedBox(height: 8),
+            Text(
+              'for ${widget.stock.symbol}',
+              style: GoogleFonts.inter(
+                color: AppColors.mutedText,
+                fontSize: 14,
+              ),
+            ),
+          ],
+        ),
+      );
+    }
+
+    return SingleChildScrollView(
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          const SizedBox(height: 16),
+          Text(
+            '${widget.stock.symbol} News',
+            style: GoogleFonts.inter(
+              color: Colors.white,
+              fontSize: 20,
+              fontWeight: FontWeight.bold,
+            ),
+          ),
+          const SizedBox(height: 16),
+          ...(_companyNews!.map((news) => Container(
+            margin: const EdgeInsets.only(bottom: 16),
+            child: ElevatedCard(
+              padding: const EdgeInsets.all(16),
+              onTap: () {
+                Navigator.push(
+                  context,
+                  MaterialPageRoute(
+                    builder: (_) => NewsDetailScreen(newsItem: news),
+                  ),
+                ); 
+              },
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  if (news.imageUrl.isNotEmpty)
+                    Container(
+                      height: 150,
+                      width: double.infinity,
+                      margin: const EdgeInsets.only(bottom: 12),
+                      decoration: BoxDecoration(
+                        borderRadius: BorderRadius.circular(8),
+                        image: DecorationImage(
+                          image: NetworkImage(news.imageUrl),
+                          fit: BoxFit.cover,
+                          onError: (exception, stackTrace) {
+                            // Handle image loading error silently
+                          },
+                        ),
+                      ),
+                    ),
+                  Text(
+                    news.title,
+                    style: GoogleFonts.inter(
+                      color: Colors.white,
+                      fontSize: 16,
+                      fontWeight: FontWeight.w600,
+                      height: 1.3,
+                    ),
+                    maxLines: 2,
+                    overflow: TextOverflow.ellipsis,
+                  ),
+                  const SizedBox(height: 8),
+                  Text(
+                    news.description,
+                    style: GoogleFonts.inter(
+                      color: AppColors.mutedText,
+                      fontSize: 14,
+                      height: 1.4,
+                    ),
+                    maxLines: 3,
+                    overflow: TextOverflow.ellipsis,
+                  ),
+                  const SizedBox(height: 12),
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                    children: [
+                      Row(
+                        children: [
+                          Text(
+                            news.source.toUpperCase(),
+                            style: GoogleFonts.inter(
+                              color: AppColors.primary,
+                              fontWeight: FontWeight.w600,
+                              fontSize: 12,
+                            ),
+                          ),
+                          const SizedBox(width: 8),
+                          Text(
+                            news.category.toUpperCase(),
+                            style: GoogleFonts.inter(
+                              color: AppColors.mutedText,
+                              fontWeight: FontWeight.w500,
+                              fontSize: 12,
+                            ),
+                          ),
+                        ],
+                      ),
+                      Text(
+                        _formatNewsTime(news.date),
+                        style: GoogleFonts.inter(
+                          color: AppColors.mutedText,
+                          fontSize: 12,
+                        ),
+                      ),
+                    ],
+                  ),
+                ],
+              ),
+            ),
+          ))).toList(),
+        ],
+      ),
+    );
+  }
+
+  String _formatNewsTime(DateTime date) {
+    final now = DateTime.now();
+    final difference = now.difference(date);
+    
+    if (difference.inDays > 0) {
+      return '${difference.inDays}d ago';
+    } else if (difference.inHours > 0) {
+      return '${difference.inHours}h ago';
+    } else if (difference.inMinutes > 0) {
+      return '${difference.inMinutes}m ago';
+    } else {
+      return 'Now';
+    }
   }
 
   

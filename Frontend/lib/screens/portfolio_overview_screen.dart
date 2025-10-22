@@ -7,6 +7,8 @@ import '../providers/app_state_provider.dart';
 import '../utils/app_colors.dart';
 import '../widgets/elevated_card.dart';
 import '../models/portfolio_data.dart';
+import '../models/search_result_model.dart';
+import '../screens/stock_detail_screen.dart';
 
 class PortfolioOverviewScreen extends StatelessWidget {
   const PortfolioOverviewScreen({super.key});
@@ -38,7 +40,7 @@ class PortfolioOverviewScreen extends StatelessWidget {
               const SizedBox(height: 24),
 
               // Holdings
-              _buildHoldingsSection(portfolioData),
+              _buildHoldingsSection(context, portfolioData),
 
               const SizedBox(height: 100), // Bottom padding
             ],
@@ -351,99 +353,135 @@ class PortfolioOverviewScreen extends StatelessWidget {
   }
 
   // ---------------- Holdings ----------------
-  Widget _buildHoldingsSection(PortfolioData data) {
+  Widget _buildHoldingsSection(BuildContext context, PortfolioData data) {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        Text(
-          'Current Holdings',
-          style: GoogleFonts.inter(
-              fontSize: 18, fontWeight: FontWeight.w600, color: Colors.white),
+        Row(
+          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+          children: [
+            Text(
+              'Current Holdings',
+              style: GoogleFonts.inter(
+                  fontSize: 18, fontWeight: FontWeight.w600, color: Colors.white),
+            ),
+            TextButton.icon(
+              onPressed: () {
+                // Trigger the search overlay
+                context.read<AppStateProvider>().showSearchOverlay();
+              },
+              icon: const Icon(Icons.search, color: AppColors.primary, size: 20),
+              label: Text(
+                'Add Stock',
+                style: GoogleFonts.inter(
+                  fontSize: 14,
+                  fontWeight: FontWeight.w500,
+                  color: AppColors.primary,
+                ),
+              ),
+            ),
+          ],
         ),
         const SizedBox(height: 16),
-        ...data.holdings.map(_buildHoldingItem).toList(),
+        ...data.holdings.map((asset) => _buildHoldingItem(context, asset)).toList(),
       ],
     );
   }
 
-  Widget _buildHoldingItem(AssetData asset) {
+  Widget _buildHoldingItem(BuildContext context, AssetData asset) {
     return Container(
       margin: const EdgeInsets.only(bottom: 12),
-      child: ElevatedCard(
-        child: Padding(
-          padding: const EdgeInsets.all(16),
-          child: Row(
-            children: [
-              Container(
-                width: 40,
-                height: 40,
-                decoration: BoxDecoration(
-                  color: AppColors.primary.withOpacity(0.1),
-                  borderRadius: BorderRadius.circular(20),
-                ),
-                child: Center(
-                  child: Text(
-                    asset.symbol.isNotEmpty ? asset.symbol[0] : '',
-                    style: GoogleFonts.inter(
-                        fontSize: 16,
-                        fontWeight: FontWeight.w600,
-                        color: AppColors.primary),
+      child: GestureDetector(
+        onTap: () {
+          // Create a SearchResult from AssetData to navigate to StockDetailScreen
+          final stockResult = SearchResult(
+            symbol: asset.symbol,
+            name: asset.name,
+            type: 'Stock', // Assuming all holdings are stocks
+          );
+          Navigator.push(
+            context,
+            MaterialPageRoute(
+              builder: (context) => StockDetailScreen(stock: stockResult),
+            ),
+          );
+        },
+        child: ElevatedCard(
+          child: Padding(
+            padding: const EdgeInsets.all(16),
+            child: Row(
+              children: [
+                Container(
+                  width: 40,
+                  height: 40,
+                  decoration: BoxDecoration(
+                    color: AppColors.primary.withOpacity(0.1),
+                    borderRadius: BorderRadius.circular(20),
+                  ),
+                  child: Center(
+                    child: Text(
+                      asset.symbol.isNotEmpty ? asset.symbol[0] : '',
+                      style: GoogleFonts.inter(
+                          fontSize: 16,
+                          fontWeight: FontWeight.w600,
+                          color: AppColors.primary),
+                    ),
                   ),
                 ),
-              ),
-              const SizedBox(width: 12),
-              Expanded(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
+                const SizedBox(width: 12),
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        asset.symbol,
+                        style: GoogleFonts.inter(
+                            fontSize: 14,
+                            fontWeight: FontWeight.w600,
+                            color: Colors.white),
+                      ),
+                      Text(
+                        asset.name,
+                        style:
+                            GoogleFonts.inter(fontSize: 12, color: Colors.grey[400]),
+                      ),
+                    ],
+                  ),
+                ),
+                Column(
+                  crossAxisAlignment: CrossAxisAlignment.end,
                   children: [
                     Text(
-                      asset.symbol,
+                      asset.formattedValue,
                       style: GoogleFonts.inter(
                           fontSize: 14,
                           fontWeight: FontWeight.w600,
                           color: Colors.white),
                     ),
-                    Text(
-                      asset.name,
-                      style:
-                          GoogleFonts.inter(fontSize: 12, color: Colors.grey[400]),
+                    Row(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        Text(
+                          asset.formattedPercentage,
+                          style:
+                              GoogleFonts.inter(fontSize: 12, color: Colors.grey[400]),
+                        ),
+                        const SizedBox(width: 8),
+                        Text(
+                          asset.formattedChangePercent,
+                          style: GoogleFonts.inter(
+                              fontSize: 12,
+                              fontWeight: FontWeight.w500,
+                              color: asset.isPositiveChange
+                                  ? AppColors.success
+                                  : AppColors.error),
+                        ),
+                      ],
                     ),
                   ],
                 ),
-              ),
-              Column(
-                crossAxisAlignment: CrossAxisAlignment.end,
-                children: [
-                  Text(
-                    asset.formattedValue,
-                    style: GoogleFonts.inter(
-                        fontSize: 14,
-                        fontWeight: FontWeight.w600,
-                        color: Colors.white),
-                  ),
-                  Row(
-                    mainAxisSize: MainAxisSize.min,
-                    children: [
-                      Text(
-                        asset.formattedPercentage,
-                        style:
-                            GoogleFonts.inter(fontSize: 12, color: Colors.grey[400]),
-                      ),
-                      const SizedBox(width: 8),
-                      Text(
-                        asset.formattedChangePercent,
-                        style: GoogleFonts.inter(
-                            fontSize: 12,
-                            fontWeight: FontWeight.w500,
-                            color: asset.isPositiveChange
-                                ? AppColors.success
-                                : AppColors.error),
-                      ),
-                    ],
-                  ),
-                ],
-              ),
-            ],
+              ],
+            ),
           ),
         ),
       ),

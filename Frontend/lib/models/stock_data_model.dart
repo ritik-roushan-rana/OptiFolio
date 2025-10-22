@@ -20,13 +20,13 @@ class StockQuote {
 
   factory StockQuote.fromJson(Map<String, dynamic> json) {
     return StockQuote(
-      currentPrice: (json['c'] as num).toDouble(),
-      change: (json['d'] as num).toDouble(),
-      percentChange: (json['dp'] as num).toDouble(),
-      high: (json['h'] as num).toDouble(),
-      low: (json['l'] as num).toDouble(),
-      open: (json['o'] as num).toDouble(),
-      previousClose: (json['pc'] as num).toDouble(),
+      currentPrice: (json['currentPrice'] ?? json['c'] ?? 0).toDouble(),
+      change: (json['change'] ?? json['d'] ?? 0).toDouble(),
+      percentChange: (json['changePercent'] ?? json['dp'] ?? 0).toDouble(),
+      high: (json['high'] ?? json['h'] ?? 0).toDouble(),
+      low: (json['low'] ?? json['l'] ?? 0).toDouble(),
+      open: (json['open'] ?? json['o'] ?? 0).toDouble(),
+      previousClose: (json['previousClose'] ?? json['pc'] ?? 0).toDouble(),
     );
   }
 }
@@ -50,12 +50,12 @@ class HistoricalDataPoint {
 
   factory HistoricalDataPoint.fromJson(Map<String, dynamic> json) {
     return HistoricalDataPoint(
-      timestamp: json['t'] as int,
-      open: (json['o'] as num).toDouble(),
-      high: (json['h'] as num).toDouble(),
-      low: (json['l'] as num).toDouble(),
-      close: (json['c'] as num).toDouble(),
-      volume: (json['v'] as num).toInt(),
+      timestamp: (json['timestamp'] ?? json['t'] ?? 0).toInt(),
+      open: (json['open'] ?? json['o'] ?? 0).toDouble(),
+      high: (json['high'] ?? json['h'] ?? 0).toDouble(),
+      low: (json['low'] ?? json['l'] ?? 0).toDouble(),
+      close: (json['close'] ?? json['c'] ?? 0).toDouble(),
+      volume: (json['volume'] ?? json['v'] ?? 0).toInt(),
     );
   }
 }
@@ -81,13 +81,13 @@ class CompanyProfile {
 
   factory CompanyProfile.fromJson(Map<String, dynamic> json) {
     return CompanyProfile(
-      ticker: json['ticker'] as String,
-      name: json['name'] as String,
-      exchange: json['exchange'] as String,
-      ipoDate: json['ipo'] as String,
-      marketCapitalization: (json['marketCapitalization'] as num).toDouble(),
-      shareOutstanding: (json['shareOutstanding'] as num).toDouble(),
-      country: json['country'] as String,
+      ticker: (json['ticker'] ?? json['symbol'] ?? '').toString(),
+      name: (json['name'] ?? '').toString(),
+      exchange: (json['exchange'] ?? '').toString(),
+      ipoDate: (json['ipo'] ?? json['ipoDate'] ?? '').toString(),
+      marketCapitalization: (json['marketCapitalization'] ?? 0).toDouble(),
+      shareOutstanding: (json['shareOutstanding'] ?? 0).toDouble(),
+      country: (json['country'] ?? '').toString(),
     );
   }
 }

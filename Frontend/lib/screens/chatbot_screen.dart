@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:provider/provider.dart';
+import 'package:flutter_dotenv/flutter_dotenv.dart';
 import '../utils/app_colors.dart';
 import '../widgets/gradient_background.dart';
 import '../services/auth_service.dart';
@@ -46,8 +47,9 @@ class _ChatbotScreenState extends State<ChatbotScreen> {
           return;
         }
 
+        final baseUrl = dotenv.env['API_BASE_URL'] ?? 'http://15.206.217.186:3000';
         final response = await http.post(
-          Uri.parse('http://15.206.217.186:3000/api/chatbot'),
+          Uri.parse('$baseUrl/api/chatbot'),
           headers: {
             'Content-Type': 'application/json',
             'Authorization': 'Bearer $token',
@@ -223,10 +225,10 @@ class _ChatbotScreenState extends State<ChatbotScreen> {
               ),
               child: TextField(
                 controller: _messageController,
-                style: GoogleFonts.inter(color: Colors.white),
+                style: GoogleFonts.inter(color: Colors.black87),
                 decoration: InputDecoration(
                   hintText: 'Type a message...',
-                  hintStyle: GoogleFonts.inter(color: AppColors.mutedText),
+                  hintStyle: GoogleFonts.inter(color: Colors.grey[600]),
                   border: InputBorder.none,
                   contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
                 ),
