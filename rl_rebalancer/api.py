@@ -10,8 +10,8 @@ import re
 
 app = FastAPI()
 
-MODEL_PATH = "/Users/ritikrana/Desktop/new/OptiFolio/rl_rebalancer_model.zip"
-DATA_PATH = "../Frontend/assets/data/all_data_2018_2021.csv"
+MODEL_PATH = "/home/ubuntu/OptiFolio/rl_rebalancer_model.zip"
+DATA_PATH = "/home/ubuntu/OptiFolio/rl_rebalancer/all_data_2018_2021.csv"
 
 class PortfolioRequest(BaseModel):
     assets: list  # e.g. ["BHARTIARTL", "TATASTEEL", ...]
@@ -30,7 +30,7 @@ def backtest():
 
 @app.post("/upload-data")
 def upload_data(file: UploadFile = File(...)):
-    file_location = f"../Frontend/assets/data/{file.filename}"
+    file_location = f"/home/ubuntu/OptiFolio/rl_rebalancer/{file.filename}"
     with open(file_location, "wb") as f:
         f.write(file.file.read())
     return {"info": f"file '{file.filename}' saved"}
@@ -38,7 +38,7 @@ def upload_data(file: UploadFile = File(...)):
 @app.post("/rl-rebalance")
 def rl_rebalance(request: PortfolioRequest):
     # Get asset names from training CSV
-    csv_path = "/Users/ritikrana/Desktop/new/OptiFolio/Frontend/assets/data/all_data_2018_2021.csv"
+    csv_path = "/home/ubuntu/OptiFolio/rl_rebalancer/all_data_2018_2021.csv"
     with open(csv_path, "r") as f:
         header = f.readline().strip().split(",")
     asset_names = [re.sub(r'_Close$', '', col) for col in header if col.endswith('_Close')]
