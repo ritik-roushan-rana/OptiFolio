@@ -19,8 +19,20 @@ export async function getRecommendations(req, res) {
     // Use RL API URL from .env
     const rlApiUrl = process.env.RL_API_URL || 'http://127.0.0.1:8001';
     const rlResponse = await axios.post(`${rlApiUrl}/rl-rebalance`, { assets });
+    const weights = rlResponse.data.weights || {};
 
-    res.json(rlResponse.data);
+    // Map weights to frontend recommendation format
+    const recommendations = Object.entries(weights).map(([symbol, targetWeight]) => ({
+      symbol,
+      name: symbol,
+      currentWeight: 0, // You can fetch actual current weight if available
+      targetWeight,
+      amount: 0, // You can fetch actual amount if available
+      action: targetWeight > 0 ? 'buy' : 'sell', // Simple logic, adjust as needed
+      reason: 'RL recommendation'
+    }));
+
+    res.json(recommendations);
   } catch (e) {
     res.status(500).json({ message: e.message });
   }
