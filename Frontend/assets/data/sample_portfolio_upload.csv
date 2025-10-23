@@ -10,4 +10,14 @@ holding,AMD,Advanced Micro Devices,95,162.80,15466.00,-190.00,-1.21,Technology,E
 holding,LLY,Eli Lilly & Co,25,885.40,22135.00,265.00,1.21,Healthcare,Equity,17000,5135.00,30.21,0.75,79.0
 holding,KO,Coca-Cola Co,180,59.12,10641.60,21.60,0.20,Consumer Staples,Equity,9900,741.60,7.49,3.05,24.1
 holding,COST,Costco Wholesale,40,782.30,31292.00,256.00,0.82,Consumer Staples,Equity,25400,5892.00,23.21,0.70,43.2
+holding,BHARTIARTL,Bharti Airtel,100,900.50,90050.00,120.00,0.13,Telecom,Equity,85000,5050.00,5.94,0.50,22.1
+holding,TATASTEEL,Tata Steel,80,120.75,9660.00,45.00,0.47,Materials,Equity,9000,660.00,7.33,2.10,13.5
+holding,TITAN,Titan Company,60,350.20,21012.00,60.00,0.29,Consumer Discretionary,Equity,20000,1012.00,5.06,0.80,55.0
+holding,HDFCLIFE,HDFC Life,50,600.00,30000.00,30.00,0.10,Financials,Equity,28000,2000.00,7.14,0.40,80.0
+holding,COALINDIA,Coal India,150,250.00,37500.00,75.00,0.20,Energy,Equity,35000,2500.00,7.14,5.00,8.0
+holding,JSWSTEEL,JSW Steel,90,850.00,76500.00,90.00,0.12,Materials,Equity,70000,6500.00,9.29,1.50,18.0
+holding,NESTLEIND,Nestle India,20,2400.00,48000.00,100.00,0.21,Consumer Staples,Equity,45000,3000.00,6.67,1.20,70.0
+holding,ICICIBANK,ICICI Bank,110,950.00,104500.00,110.00,0.11,Financials,Equity,100000,4500.00,4.50,0.30,20.0
+holding,MARUTI,Maruti Suzuki,30,11000.00,330000.00,300.00,0.09,Consumer Discretionary,Equity,320000,10000.00,3.13,0.60,35.0
+holding,ULTRACEMCO,UltraTech Cement,25,8500.00,212500.00,250.00,0.12,Materials,Equity,200000,12500.00,6.25,0.40,40.0
 performance,,,,,,,,,,,,,,,"1Y",11,159251,,,,6,2024-06-30
