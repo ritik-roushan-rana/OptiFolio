@@ -11,7 +11,10 @@ class RebalancingService {
 
   /// Fetch rebalance suggestions from backend.
   Future<List<RebalanceRecommendation>> fetchSuggestions(PortfolioData p) async {
-    final raw = await _api.getJson('/api/rebalance');
+    // Prepare asset list from portfolio data
+    final assets = p.holdings.map((h) => h.symbol).toList();
+    final raw = await _api.postJson('/api/rebalance', {'assets': assets});
+    print('Rebalance raw response: $raw');
     if (raw is! List) return [];
     return raw.map<RebalanceRecommendation>((r) {
       final m = (r as Map);
