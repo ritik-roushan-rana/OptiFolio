@@ -39,18 +39,18 @@ def upload_data(file: UploadFile = File(...)):
 def rl_rebalance(portfolio_file: UploadFile = File(...)):
     import io
     portfolio_df = pd.read_csv(io.StringIO(portfolio_file.file.read().decode()))
-    # Get asset names from portfolio file only
-    asset_names = portfolio_df[portfolio_df.columns[0]].tolist()[1:] if portfolio_df.columns[0] == 'Stock' else portfolio_df['symbol'].tolist()
-    # If using sample_portfolio.csv format
+    with open(DATA_PATH, "r") as f:
+        header = f.readline().strip().split(",")
+    all_asset_names = [re.sub(r'_Close$', '', col) for col in header if col.endswith('_Close')]
+    portfolio_assets = portfolio_df[portfolio_df.columns[0]].tolist()[1:] if portfolio_df.columns[0] == 'Stock' else portfolio_df['symbol'].tolist()
     if 'Stock' in portfolio_df.columns:
         holdings = portfolio_df[['Stock', 'Current_Amount']]
         portfolio_map = {row['Stock']: {'value': row['Current_Amount']} for _, row in holdings.iterrows()}
     else:
         holdings = portfolio_df[portfolio_df['type'] == 'holding']
         portfolio_map = {row['symbol']: {'value': row['value']} for _, row in holdings.iterrows()}
-    # Fetch live prices for only portfolio assets
     latest_prices = {}
-    for asset in asset_names:
+    for asset in all_asset_names:
         try:
             ticker = asset + ".NS"
             data = yf.download(ticker, period='1d', interval='1m')
@@ -58,20 +58,16 @@ def rl_rebalance(portfolio_file: UploadFile = File(...)):
         except Exception:
             price = 1e-6
         latest_prices[f"{asset}_Close"] = price
-    # Calculate current weights for each asset in portfolio
-    total_portfolio_value = sum([float(portfolio_map[asset]['value']) for asset in asset_names if asset in portfolio_map])
+    total_portfolio_value = sum([float(portfolio_map[asset]['value']) for asset in portfolio_assets if asset in portfolio_map])
     current_weights = {}
-    for asset in asset_names:
+    for asset in all_asset_names:
         value = float(portfolio_map[asset]['value']) if asset in portfolio_map else 0.0
         current_weights[asset] = value / total_portfolio_value if total_portfolio_value > 0 else 0.0
-    # Prepare DataFrame for RL model
     df = pd.DataFrame([latest_prices])
     env = PortfolioEnv(df)
     model = PPO.load(MODEL_PATH)
     obs = env.reset()
     action, _ = model.predict(obs)
-    # Return only portfolio assets
-    return {
-        "current_weights": current_weights,
-        "recommended_weights": dict(zip(env.asset_names, action.tolist()))
-    }
+    filtered_current_weights = {k: v for k, v in current_weights.items() if k in portfolio_assets}
+    filtered_recommended_weights = {k: v for k, v in dict(zip(env.asset_names, action.tolist())).items() if k in portfolio_assets}
+    return dict(current_weights=filtered_current_weights, recommended_weights=filtered_recommended_weights)
