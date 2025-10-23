@@ -1,4 +1,7 @@
 import Portfolio from '../models/portfolioModel.js';
+import axios from 'axios';
+import dotenv from 'dotenv';
+dotenv.config();
 
 // Compute rebalance recommendations on the fly
 export async function getRecommendations(req, res) {
@@ -8,43 +11,16 @@ export async function getRecommendations(req, res) {
       return res.json([]);
     }
 
-    const positions = portfolio.positions.filter(p => (p.quantity || 0) > 0 && (p.avgPrice || 0) >= 0);
-    const totalValue = positions.reduce((s, p) => s + (p.quantity || 0) * (p.avgPrice || 0), 0) || 0;
+    // Extract asset symbols from positions
+    const assets = portfolio.positions
+      .filter(p => (p.quantity || 0) > 0 && (p.avgPrice || 0) >= 0)
+      .map(p => p.symbol);
 
-    // Derive current weights
-    const enriched = positions.map(p => {
-      const value = (p.quantity || 0) * (p.avgPrice || 0);
-      const currentWeight = totalValue ? (value / totalValue) * 100 : 0;
-      // Use provided targetAllocation (%) if present, else equal-weight baseline
-      const fallbackTarget = 100 / positions.length;
-      const targetWeight = (p.targetAllocation && p.targetAllocation > 0)
-        ? p.targetAllocation
-        : fallbackTarget;
+    // Use RL API URL from .env
+    const rlApiUrl = process.env.RL_API_URL || 'http://127.0.0.1:8001';
+    const rlResponse = await axios.post(`${rlApiUrl}/rl-rebalance`, { assets });
 
-      const diff = currentWeight - targetWeight; // + overweight, - underweight
-      let action = 'HOLD';
-      if (diff > 2) action = 'SELL';
-      else if (diff < -2) action = 'BUY';
-
-      const amount = Math.abs(diff) / 100 * totalValue;
-
-      return {
-        symbol: p.symbol,
-        name: p.name || p.symbol,
-        currentWeight: Number(currentWeight.toFixed(2)),
-        targetWeight: Number(targetWeight.toFixed(2)),
-        amount: Number(amount.toFixed(2)),
-        action,
-        reason:
-          action === 'HOLD'
-            ? 'Within tolerance'
-            : action === 'SELL'
-              ? 'Over target allocation'
-              : 'Below target allocation'
-      };
-    });
-
-    res.json(enriched);
+    res.json(rlResponse.data);
   } catch (e) {
     res.status(500).json({ message: e.message });
   }
