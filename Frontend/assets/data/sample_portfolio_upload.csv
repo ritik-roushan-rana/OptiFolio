@@ -20,4 +20,9 @@ holding,NESTLEIND,Nestle India,20,2400.00,48000.00,100.00,0.21,Consumer Staples,
 holding,ICICIBANK,ICICI Bank,110,950.00,104500.00,110.00,0.11,Financials,Equity,100000,4500.00,4.50,0.30,20.0
 holding,MARUTI,Maruti Suzuki,30,11000.00,330000.00,300.00,0.09,Consumer Discretionary,Equity,320000,10000.00,3.13,0.60,35.0
 holding,ULTRACEMCO,UltraTech Cement,25,8500.00,212500.00,250.00,0.12,Materials,Equity,200000,12500.00,6.25,0.40,40.0
+holding,AAPL,Apple Inc,100,180.50,18050.00,50.00,0.28,Technology,Equity,15000,3050.00,20.33,0.60,28.0
+holding,MSFT,Microsoft Corp,80,320.10,25608.00,80.00,0.31,Technology,Equity,22000,3608.00,16.40,0.80,35.0
+holding,GOOGL,Alphabet Inc,60,140.20,8412.00,30.00,0.36,Communication,Equity,7000,1412.00,20.17,0.00,30.0
+holding,AMZN,Amazon.com Inc,50,130.00,6500.00,25.00,0.39,Consumer Discretionary,Equity,5000,1500.00,30.00,0.00,60.0
+holding,TSLA,Tesla Inc,40,250.00,10000.00,40.00,0.40,Consumer Discretionary,Equity,8000,2000.00,25.00,0.00,70.0
 performance,,,,,,,,,,,,,,,"1Y",11,159251,,,,6,2024-06-30

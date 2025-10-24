@@ -100,9 +100,12 @@ class _PerformanceInsightsScreenState
     return FutureBuilder<List<RiskReturnPoint>>(
       future: riskReturnFuture,
       builder: (context, snapshot) {
-        if (!snapshot.hasData)
+        if (snapshot.connectionState == ConnectionState.waiting)
           return const Center(child: CircularProgressIndicator());
-
+        if (snapshot.hasError)
+          return Center(child: Text('Error: ${snapshot.error}', style: TextStyle(color: Colors.red)));
+        if (!snapshot.hasData || snapshot.data!.isEmpty)
+          return const Center(child: Text('No data available', style: TextStyle(color: Colors.grey)));
         final data = snapshot.data!;
         return ElevatedCard(
           padding: const EdgeInsets.all(16),
@@ -173,9 +176,12 @@ class _PerformanceInsightsScreenState
     return FutureBuilder<List<CorrelationData>>(
       future: correlationFuture,
       builder: (context, snapshot) {
-        if (!snapshot.hasData)
+        if (snapshot.connectionState == ConnectionState.waiting)
           return const Center(child: CircularProgressIndicator());
-
+        if (snapshot.hasError)
+          return Center(child: Text('Error: ${snapshot.error}', style: TextStyle(color: Colors.red)));
+        if (!snapshot.hasData || snapshot.data!.isEmpty)
+          return const Center(child: Text('No data available', style: TextStyle(color: Colors.grey)));
         final data = snapshot.data!;
         return ElevatedCard(
           padding: const EdgeInsets.all(16),
@@ -205,10 +211,12 @@ class _PerformanceInsightsScreenState
     return FutureBuilder<List<FeeReturnData>>(
       future: feeReturnFuture,
       builder: (context, snapshot) {
-        if (!snapshot.hasData) {
+        if (snapshot.connectionState == ConnectionState.waiting)
           return const Center(child: CircularProgressIndicator());
-        }
-
+        if (snapshot.hasError)
+          return Center(child: Text('Error: ${snapshot.error}', style: TextStyle(color: Colors.red)));
+        if (!snapshot.hasData || snapshot.data!.isEmpty)
+          return const Center(child: Text('No data available', style: TextStyle(color: Colors.grey)));
         final data = snapshot.data!;
         return ElevatedCard(
           padding: const EdgeInsets.all(16),
@@ -285,10 +293,12 @@ class _PerformanceInsightsScreenState
     return FutureBuilder<List<WhatIfScenario>>(
       future: whatIfFuture,
       builder: (context, snapshot) {
-        if (!snapshot.hasData) {
+        if (snapshot.connectionState == ConnectionState.waiting)
           return const Center(child: CircularProgressIndicator());
-        }
-
+        if (snapshot.hasError)
+          return Center(child: Text('Error: ${snapshot.error}', style: TextStyle(color: Colors.red)));
+        if (!snapshot.hasData || snapshot.data!.isEmpty)
+          return const Center(child: Text('No data available', style: TextStyle(color: Colors.grey)));
         final scenarios = snapshot.data!;
         return Column(
           children: scenarios.map((e) {

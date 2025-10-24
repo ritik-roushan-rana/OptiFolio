@@ -42,7 +42,8 @@ export async function getPortfolioData(req, res) {
     }
 
     const value = (pos.quantity || 0) * (pos.avgPrice || 0);
-    const changePercent = Number(((Math.random() - 0.5) * 6).toFixed(2));
+    // Use actual changePercent from CSV or database if available
+    const changePercent = typeof pos.dayChangePct === 'number' ? pos.dayChangePct : 0;
 
     return {
       // core
@@ -65,20 +66,12 @@ export async function getPortfolioData(req, res) {
     percentage: totalValue ? Number(((h.value / totalValue) * 100).toFixed(2)) : 0
   }));
 
-  // Simple synthetic performance history
-  function makeSeries(points, start) {
-    let base = start;
-    return Array.from({ length: points }, () => {
-      base *= 1 + (Math.random() - 0.5) * 0.01;
-      return Number(base.toFixed(2));
-    });
-  }
-
-  const performanceHistory = {
-    '1M': makeSeries(30, totalValue || 10000),
-    '3M': makeSeries(13, (totalValue || 10000) * 0.95),
-    '6M': makeSeries(26, (totalValue || 10000) * 0.9),
-    '1Y': makeSeries(52, (totalValue || 10000) * 0.8)
+  // Use actual performance history if available, else flat history
+  const performanceHistory = p.performanceHistory || {
+    '1M': Array(30).fill(totalValue),
+    '3M': Array(13).fill(totalValue),
+    '6M': Array(26).fill(totalValue),
+    '1Y': Array(52).fill(totalValue)
   };
 
   const valueChange = Number((holdings.reduce((s, h) => s + (h.value * h.changePercent / 100), 0)).toFixed(2));
