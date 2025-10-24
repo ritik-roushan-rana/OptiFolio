@@ -45,23 +45,11 @@ class RebalancingService {
     });
   }
 
-  /// Apply selected rebalance actions and refresh suggestions.
-  Future<void> applyAndRefresh(List<RebalanceRecommendation> recs, PortfolioData p) async {
-    await applyRebalance(recs);
-    await fetchSuggestions(p);
-  }
-
   /// Ignore a rebalance recommendation (requires backend endpoint support).
   Future<void> ignoreRebalance(String symbol) async {
     await _api.postJson('/api/rebalance/ignore', {
       'symbol': symbol,
     });
-  }
-
-  /// Ignore a rebalance recommendation and refresh suggestions.
-  Future<void> ignoreAndRefresh(String symbol, PortfolioData p) async {
-    await ignoreRebalance(symbol);
-    await fetchSuggestions(p);
   }
 
   // ---- Helpers ----
