@@ -104,11 +104,8 @@ class MainScreen extends StatelessWidget {
       case 1:
         return const BacktestingScreen();
       case 2:
-        final suggestions = context.watch<AppStateProvider>().rebalancingSuggestions;
-        if (suggestions.isEmpty) {
-          return const Center(child: CircularProgressIndicator());
-        }
-        return RebalancingSuggestionsScreen(recommendations: suggestions);
+        // Only pass portfolio if needed, do not pass 'recommendations'
+        return const RebalancingSuggestionsScreen();
       case 3:
         return const ChartsAnalyticsScreen();
       case 4:

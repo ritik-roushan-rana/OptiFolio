@@ -292,6 +292,16 @@ class AppStateProvider extends ChangeNotifier {
     safeNotifyListeners();
   }
 
+  Future<void> applyRebalanceAndRefresh(List<RebalanceRecommendation> recs) async {
+    await _rebalancingService.applyRebalance(recs);
+    await loadRebalancingSuggestions();
+  }
+
+  Future<void> ignoreRebalanceAndRefresh(String symbol) async {
+    await _rebalancingService.ignoreRebalance(symbol);
+    await loadRebalancingSuggestions();
+  }
+
   // News
   Future<void> loadNews() async {
     try {

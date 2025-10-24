@@ -17,10 +17,12 @@ export async function getRecommendations(req, res) {
     console.log('Total portfolio value:', totalValue);
     console.log('Portfolio positions:', portfolio.positions);
 
-    // Extract asset symbols from positions
+    // Filter out ignored recommendations BEFORE calling RL model
+    const ignored = portfolio.ignoredRebalances || [];
     const assets = portfolio.positions
       .filter(p => (p.quantity || 0) > 0 && (p.avgPrice || 0) >= 0)
-      .map(p => p.symbol);
+      .map(p => p.symbol)
+      .filter(symbol => !ignored.includes(symbol.trim().toUpperCase()));
 
     // Use RL API URL from .env
     const rlApiUrl = process.env.RL_API_URL || 'http://127.0.0.1:8001';
@@ -34,7 +36,6 @@ export async function getRecommendations(req, res) {
     console.log('Portfolio symbols:', portfolio.positions.map(p => p.symbol));
 
     // Filter out ignored recommendations
-    const ignored = portfolio.ignoredRebalances || [];
     // Map weights to frontend recommendation format
     const recommendations = Object.entries(weights)
       .filter(([symbol]) => !ignored.includes(symbol.trim().toUpperCase()))

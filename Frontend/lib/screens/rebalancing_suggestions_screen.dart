@@ -1,17 +1,17 @@
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
+import 'package:provider/provider.dart';
 import '../utils/app_colors.dart';
 import '../widgets/elevated_card.dart';
 import '../models/rebalance_model.dart';
 import '../models/portfolio_data.dart'; // PortfolioData & AssetData
+import '../providers/app_state_provider.dart';
 
 class RebalancingSuggestionsScreen extends StatefulWidget {
-  final List<RebalanceRecommendation> recommendations;
   final PortfolioData? portfolio; // Optional portfolio
 
   const RebalancingSuggestionsScreen({
     super.key,
-    this.recommendations = const [],
     this.portfolio,
   });
 
@@ -22,40 +22,40 @@ class RebalancingSuggestionsScreen extends StatefulWidget {
 
 class _RebalancingSuggestionsScreenState
     extends State<RebalancingSuggestionsScreen> {
-  late List<RebalanceRecommendation> _recommendations;
-
   @override
   void initState() {
     super.initState();
-    _recommendations = List.from(widget.recommendations);
+    Provider.of<AppStateProvider>(context, listen: false)
+        .loadRebalancingSuggestions();
   }
 
-  void _applyAction(RebalanceRecommendation rec) {
-    setState(() {
-      _recommendations.remove(rec);
-    });
+  void _applyAction(RebalanceRecommendation rec) async {
+    final appState = Provider.of<AppStateProvider>(context, listen: false);
+    await appState.applyRebalanceAndRefresh([rec]);
     ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('Applied ${rec.symbol} (${rec.actionString})')));
+      SnackBar(content: Text('Applied ${rec.symbol} (${rec.actionString})')),
+    );
   }
 
-  void _ignoreAction(RebalanceRecommendation rec) {
-    setState(() {
-      _recommendations.remove(rec);
-    });
+  void _ignoreAction(RebalanceRecommendation rec) async {
+    final appState = Provider.of<AppStateProvider>(context, listen: false);
+    await appState.ignoreRebalanceAndRefresh(rec.symbol);
     ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('Ignored ${rec.symbol}')));
+      SnackBar(content: Text('Ignored ${rec.symbol}')),
+    );
   }
 
   @override
   Widget build(BuildContext context) {
+    final recommendations =
+        context.watch<AppStateProvider>().rebalancingSuggestions;
+
     final buyRecs =
-        _recommendations.where((r) => r.action == RebalanceAction.buy).toList();
-    final sellRecs = _recommendations
-        .where((r) => r.action == RebalanceAction.sell)
-        .toList();
-    final holdRecs = _recommendations
-        .where((r) => r.action == RebalanceAction.hold)
-        .toList();
+        recommendations.where((r) => r.action == RebalanceAction.buy).toList();
+    final sellRecs =
+        recommendations.where((r) => r.action == RebalanceAction.sell).toList();
+    final holdRecs =
+        recommendations.where((r) => r.action == RebalanceAction.hold).toList();
 
     return SingleChildScrollView(
       padding: const EdgeInsets.all(16),
@@ -73,7 +73,7 @@ class _RebalancingSuggestionsScreenState
           if (widget.portfolio != null) const SizedBox(height: 24),
 
           // Optimization Summary
-          _buildSummaryCard(),
+          _buildSummaryCard(recommendations),
           const SizedBox(height: 24),
 
           // Sell / Buy / Hold Recommendations
@@ -90,12 +90,12 @@ class _RebalancingSuggestionsScreenState
           if (holdRecs.isNotEmpty) const SizedBox(height: 24),
 
           // RL Agent Recommendations (reusing all remaining recs with actions)
-          if (_recommendations.isNotEmpty)
-            _buildRLRecommendationsSection(context, _recommendations),
+          if (recommendations.isNotEmpty)
+            _buildRLRecommendationsSection(context, recommendations),
           const SizedBox(height: 24),
 
           // Projected Impact + Fees + Execute
-          _buildProjectedImpact(),
+          _buildProjectedImpact(recommendations),
           const SizedBox(height: 24),
           _buildFeesCard(),
           const SizedBox(height: 24),
@@ -249,11 +249,11 @@ class _RebalancingSuggestionsScreenState
   }
 
   // ---------------- Summary Card ----------------
-  Widget _buildSummaryCard() {
+  Widget _buildSummaryCard(List<RebalanceRecommendation> recommendations) {
     final totalAmount =
-        _recommendations.fold<double>(0, (sum, r) => sum + r.amount);
+        recommendations.fold<double>(0, (sum, r) => sum + r.amount);
     final totalDifferencePercent =
-        _recommendations.fold<double>(0, (sum, r) => sum + r.difference);
+        recommendations.fold<double>(0, (sum, r) => sum + r.difference);
 
     return ElevatedCard(
       child: Padding(
@@ -497,11 +497,11 @@ class _RebalancingSuggestionsScreenState
   }
 
   // ---------------- Projected Impact ----------------
-  Widget _buildProjectedImpact() {
-    final totalBuy = _recommendations
+  Widget _buildProjectedImpact(List<RebalanceRecommendation> recommendations) {
+    final totalBuy = recommendations
         .where((r) => r.action == RebalanceAction.buy)
         .fold<double>(0, (sum, r) => sum + r.amount);
-    final totalSell = _recommendations
+    final totalSell = recommendations
         .where((r) => r.action == RebalanceAction.sell)
         .fold<double>(0, (sum, r) => sum + r.amount);
     final netChange = totalBuy - totalSell;
