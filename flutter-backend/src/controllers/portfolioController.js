@@ -143,10 +143,6 @@ export async function upsertPortfolio(req, res) {
           }
           const targetAllocation = Number(pick(r, ['TargetAllocation','Allocation','Weight']));
 
-          // Parse dayChangePct and gainPct from CSV row
-          const dayChangePct = Number(pick(r, ['dayChangePct','DayChangePct','ChangePct','Change %','dayChange','DayChange']));
-          const gainPct = Number(pick(r, ['gainPct','GainPct','Gain %','gain','totalGain','TotalGainPct']));
-
           // Always sanitize symbol and name before storing
           symbol = symbol.replace(/[^A-Z0-9]/g, '').trim().toUpperCase();
           name = name.replace(/[^A-Za-z0-9 ]/g, '').trim();
@@ -160,9 +156,7 @@ export async function upsertPortfolio(req, res) {
             quantity,
             avgPrice: Number(avgPrice.toFixed(2)),
             targetAllocation: isNaN(targetAllocation) ? 0 : targetAllocation,
-            currentAllocation: 0,
-            dayChangePct: isNaN(dayChangePct) ? 0 : dayChangePct,
-            gainPct: isNaN(gainPct) ? 0 : gainPct
+            currentAllocation: 0
           };
         })
         .filter(r => {

@@ -30,20 +30,18 @@ export const deleteInsight = async (req, res) => {
 };
 
 // Frontend data endpoints
-export const riskReturnData = async (req, res) => {
-  // Get user's portfolio
-  const userId = req.user?.id;
-  if (!userId) return res.json([]);
-  const portfolio = await Portfolio.findOne({ userId });
-  if (!portfolio || !portfolio.positions) return res.json([]);
-  // Use dayChangePct as risk, gainPct as return if available, else fallback to 0
-  res.json(
-    portfolio.positions.map(pos => ({
-      asset: pos.symbol || pos.name || 'N/A',
-      risk: typeof pos.dayChangePct === 'number' ? pos.dayChangePct : 0,
-      returnRate: typeof pos.gainPct === 'number' ? pos.gainPct : 0,
-    }))
-  );
+export const riskReturnData = async (_req, res) => {
+  // Return static dummy data for demo
+  res.json([
+    { asset: 'AAPL', risk: 0.56, returnRate: 17.62 },
+    { asset: 'MSFT', risk: 0.31, returnRate: 16.40 },
+    { asset: 'GOOGL', risk: 0.36, returnRate: 20.17 },
+    { asset: 'AMZN', risk: 0.39, returnRate: 30.00 },
+    { asset: 'TSLA', risk: 0.40, returnRate: 25.00 },
+    { asset: 'JNJ', risk: -0.50, returnRate: -4.96 },
+    { asset: 'DIS', risk: 0.44, returnRate: -19.74 },
+    { asset: 'ORCL', risk: 0.56, returnRate: 35.99 }
+  ]);
 };
 
 export const correlationData = async (_req, res) => {

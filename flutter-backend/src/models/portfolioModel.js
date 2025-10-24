@@ -6,9 +6,7 @@ const positionSchema = new mongoose.Schema({
   quantity: Number,
   avgPrice: Number,
   targetAllocation: Number,
-  currentAllocation: Number,
-  dayChangePct: Number, // <-- Added for risk
-  gainPct: Number      // <-- Added for return
+  currentAllocation: Number
 });
 
 const portfolioSchema = new mongoose.Schema({
@@ -16,7 +14,6 @@ const portfolioSchema = new mongoose.Schema({
   portfolioName: String,
   description: String,
   positions: [positionSchema],
-  ignoredRebalances: { type: [String], default: [] },
   createdAt: { type: Date, default: Date.now }
 });
 
