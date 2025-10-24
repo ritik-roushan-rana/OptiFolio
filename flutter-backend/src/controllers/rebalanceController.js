@@ -97,6 +97,8 @@ export async function applyRebalance(req, res) {
         updated++;
       }
     });
+    console.log('Applied rebalance actions:', actions);
+    console.log('Updated portfolio positions:', portfolio.positions);
     await portfolio.save();
     res.json({ message: 'Rebalance actions applied', updated });
   } catch (e) {
