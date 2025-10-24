@@ -185,7 +185,8 @@ export async function upsertPortfolio(req, res) {
 
     let p = await Portfolio.findOne({ userId: req.user.id });
     if (p) {
-      if (positions.length) p.positions = positions;
+      // Always update positions, even if empty (to allow clearing)
+      p.positions = positions;
       p.portfolioName = portfolioName;
       p.description = description;
       await p.save();
