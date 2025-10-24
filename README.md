@@ -1,6 +1,6 @@
 # OptiFolio: Portfolio Tracker
 
-OptiFolio is a full-stack investment portfolio and analytics application. It features a Flutter-based frontend and a Node.js + MongoDB backend. The app provides tools for portfolio tracking, analytics, and insights, making it ideal for personal finance enthusiasts and investors.
+OptiFolio is a full-stack investment portfolio and analytics application. It features a Flutter-based frontend, a Node.js + MongoDB backend, and a Python RL model service. The app provides tools for portfolio tracking, analytics, and insights, making it ideal for personal finance enthusiasts and investors.
 
 ---
 
@@ -10,25 +10,24 @@ OptiFolio/
 ├── Frontend/                 # Flutter app
 │   ├── lib/
 │   │   ├── widgets/
-│   │   │   └── settings_overlay.dart
 │   │   ├── providers/
-│   │   │   └── app_state_provider.dart
 │   │   └── services/
-│   │       ├── auth_service.dart
-│   │       └── settings_service.dart
 │   ├── pubspec.yaml
 │   └── ios/ android/ assets/ ...
-└── flutter-backend/          # Node.js API server
-    ├── src/
-    │   ├── app.js
-    │   ├── db.js
-    │   ├── middleware/
-    │   │   └── auth.js
-    │   ├── controllers/
-    │   ├── routes/
-    │   └── models/
-    ├── package.json
-    └── .env (local)
+├── flutter-backend/          # Node.js API server
+│   ├── src/
+│   │   ├── app.js
+│   │   ├── db.js
+│   │   ├── middleware/
+│   │   ├── controllers/
+│   │   ├── routes/
+│   │   └── models/
+│   ├── package.json
+│   └── .env
+├── rl_rebalancer/            # RL model Python service
+│   ├── api.py
+│   ├── train.py
+│   └── ...
 ```
 
 ---
@@ -46,54 +45,100 @@ OptiFolio/
 - **Authentication**: JWT-based
 - **Utilities**: CORS, Morgan (logging)
 
+### RL Model
+- **Language**: Python
+- **Purpose**: Portfolio rebalancing API
+
 ---
 
 ## Features
 
 ### Frontend
-- **Onboarding & Authentication**: Managed via `AuthService`
-- **Dynamic Settings Panel**: Rendered dynamically using `SettingsOverlay`
-- **Centralized State Management**: `AppStateProvider`
-- **Custom Theming**: Google Fonts integration
-- **Animated Panels**: Smooth transitions for overlays
+- Onboarding & Authentication
+- Dynamic Settings Panel
+- Centralized State Management
+- Custom Theming & Animated Panels
 
 ### Backend
-- **Modular API Design**: Organized routes and controllers
-- **Database Integration**: Centralized DB connection via `db.js`
-- **Pluggable Controllers**: Alerts, analytics, portfolios, and more
-- **Health Check Endpoint**: `/api/health`
+- Modular API Design
+- Database Integration
+- Pluggable Controllers (alerts, analytics, portfolios, etc.)
+- Health Check Endpoint
+
+### RL Model
+- Portfolio rebalancing via API
+
+---
+
+## App Screens & Features
+
+### Frontend Screens
+- **Onboarding Screen**: User registration and login.
+- **Portfolio Dashboard**: Overview of investments, balances, and performance.
+- **Analytics Screen**: Visualizations and metrics for portfolio analysis.
+- **Insights Screen**: AI-generated investment insights and recommendations.
+- **News Feed**: Latest market news and updates.
+- **Rebalance Screen**: Portfolio rebalancing suggestions and actions.
+- **Alerts Screen**: Price and event alerts management.
+- **Settings Overlay**: Dynamic settings panel with toggles, navigation, and info cards.
+- **Search Screen**: Search for stocks, companies, and news.
+- **Stock Details Screen**: Detailed view of individual stock data.
+- **Quotes Screen**: Live market quotes and price updates.
+- **Authentication Screen**: Managed via AuthService for secure login/logout.
+
+### RL Model Features
+- **Portfolio Rebalancing**: Uses reinforcement learning to suggest optimal asset allocations.
+- **API Service**: Exposes endpoints for live inference and portfolio uploads (see rl_rebalancer/api.py and related files).
+- **Integration**: Backend communicates with RL model via REST API (`RL_API_URL`).
+- **ML Model Files**: Model weights and logic are stored in `rl_rebalancer/` (see attachments above for file contents).
+
+### Key Features
+- **Portfolio Tracking**: Add, edit, and view investment portfolios.
+- **Performance Analytics**: Track returns, risk, and other metrics.
+- **AI Insights**: Get actionable insights powered by backend and RL model.
+- **Market News**: Stay updated with financial news feeds.
+- **Rebalancing**: Automated and manual portfolio rebalancing.
+- **Alerts**: Set up price and event alerts for assets.
+- **Dynamic Settings**: Customize app experience with dynamic settings panel.
+- **Centralized State Management**: Provider-based state for consistency.
+- **Custom Theming**: Google Fonts and animated overlays for modern UI.
+- **Health Check**: `/api/health` endpoint for backend status.
 
 ---
 
 ## Environment Variables
 
-### Backend `.env` (example):
+### Backend (`flutter-backend/.env`)
 ```
-PORT=5000
-MONGODB_URI=mongodb+srv://...
-JWT_SECRET=replace_me
-CORS_ORIGIN=http://localhost:3000
+PORT=3000
+MONGODB_URI="mongodb+srv://<user>:<password>@cluster0.mongodb.net/"
+JWT_SECRET="your_jwt_secret"
+GEMINI_API_KEY="your_gemini_api_key"
+CORS_ORIGIN="*"
+RL_API_URL="http://<rl_model_host>:8001"
 ```
 
-### Frontend `.env` (example):
+### Frontend (`Frontend/.env`)
 ```
-API_BASE_URL=http://localhost:5000/api
-APP_ENV=dev
+IOS_CLIENT_ID=<ios_client_id>
+REVERSED_CLIENT_ID=<reversed_client_id>
+WEB_CLIENT_ID=<web_client_id>
+FINNHUB_API_KEY=<finnhub_api_key>
+API_BASE_URL=http://<backend_host>:3000
 ```
 
 ---
 
 ## Installation
 
-### 1. Backend
+### Backend
 ```bash
 cd flutter-backend
 npm install
-npm run dev        # if a dev script exists
-# or: node src/app.js
+npm run dev
 ```
 
-### 2. Frontend
+### Frontend
 ```bash
 cd Frontend
 flutter pub get
@@ -107,12 +152,45 @@ cd ios
 pod install
 ```
 
+### RL Model
+```bash
+cd rl_rebalancer
+pip install -r requirements.txt
+python api.py
+```
+
+---
+
+## SSH & Server Access
+
+To access your backend server via SSH:
+
+```bash
+cd pem_key
+ssh -i backend.pem ubuntu@15.206.217.186
+```
+
+This connects to your Ubuntu 24.04.3 LTS server (AWS EC2, IP: 15.206.217.186) using your PEM key.
+
+---
+
+## RL Model Service
+
+To run the RL rebalancer API service:
+
+```bash
+cd rl_rebalancer
+source venv/bin/activate
+uvicorn api:app --host 0.0.0.0 --port 8001
+```
+
 ---
 
 ## Running Full Stack
 1. Start MongoDB (local or Atlas).
-2. Start backend: `npm run dev`
-3. Run Flutter app: `flutter run`
+2. Start RL model service: `python api.py`
+3. Start backend: `npm run dev`
+4. Run Flutter app: `flutter run`
 
 ---
 
