@@ -38,14 +38,15 @@ def upload_data(file: UploadFile = File(...)):
 @app.post("/rl-rebalance")
 def rl_rebalance(request: PortfolioRequest):
     # Get asset names from training CSV
-    csv_path = "/home/ubuntu/OptiFolio/rl_rebalancer/all_data_2018_2021.csv"
+    csv_path = DATA_PATH
     with open(csv_path, "r") as f:
         header = f.readline().strip().split(",")
-    asset_names = [re.sub(r'_Close$', '', col) for col in header if col.endswith('_Close')]
-
-    # Fetch live prices for all assets (append .NS for Indian stocks)
+    all_asset_names = [re.sub(r'_Close$', '', col) for col in header if col.endswith('_Close')]
+    # Use only assets provided in the request (portfolio holdings)
+    portfolio_assets = request.assets
+    # Fetch live prices for all assets in training file
     latest_prices = {}
-    for asset in asset_names:
+    for asset in all_asset_names:
         try:
             ticker = asset + ".NS"
             data = yf.download(ticker, period='1d', interval='1m')
@@ -53,10 +54,12 @@ def rl_rebalance(request: PortfolioRequest):
         except Exception:
             price = 1e-6
         latest_prices[f"{asset}_Close"] = price
-
     df = pd.DataFrame([latest_prices])
     env = PortfolioEnv(df)
     model = PPO.load(MODEL_PATH)
     obs = env.reset()
     action, _ = model.predict(obs)
-    return {"weights": dict(zip(env.asset_names, action.tolist()))}
+    # Only return weights for portfolio assets
+    weights = dict(zip(env.asset_names, action.tolist()))
+    filtered_weights = {k: v for k, v in weights.items() if k in portfolio_assets}
+    return {"weights": filtered_weights}
