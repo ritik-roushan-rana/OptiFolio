@@ -18,7 +18,7 @@ export async function getRecommendations(req, res) {
     console.log('Portfolio positions:', portfolio.positions);
 
     // Filter out ignored recommendations BEFORE calling RL model
-    const ignored = portfolio.ignoredRebalances || [];
+    const ignored = (portfolio.ignoredRebalances || []).map(s => s.trim().toUpperCase());
     const assets = portfolio.positions
       .filter(p => (p.quantity || 0) > 0 && (p.avgPrice || 0) >= 0)
       .map(p => p.symbol)

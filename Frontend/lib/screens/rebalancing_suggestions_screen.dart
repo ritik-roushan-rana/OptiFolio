@@ -639,9 +639,17 @@ class _RebalancingSuggestionsScreenState
     return SizedBox(
       width: double.infinity,
       child: ElevatedButton(
-        onPressed: () {
-          ScaffoldMessenger.of(context).showSnackBar(const SnackBar(
-              content: Text('Rebalance executed successfully!')));
+        onPressed: () async {
+          final appState = Provider.of<AppStateProvider>(context, listen: false);
+          final recs = appState.rebalancingSuggestions;
+          if (recs.isNotEmpty) {
+            await appState.applyRebalanceAndRefresh(recs);
+            ScaffoldMessenger.of(context).showSnackBar(const SnackBar(
+                content: Text('Rebalance executed successfully!')));
+          } else {
+            ScaffoldMessenger.of(context).showSnackBar(const SnackBar(
+                content: Text('No rebalance actions to execute.')));
+          }
         },
         style: ElevatedButton.styleFrom(
           backgroundColor: AppColors.primary,
