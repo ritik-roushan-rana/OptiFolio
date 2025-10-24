@@ -122,7 +122,8 @@ export async function upsertPortfolio(req, res) {
           const ent = (r.entity || r.Entity || '').toString().toLowerCase();
           return !r.entity || !ent || ent === 'holding';
         })
-        .map(r => {
+        .map((r, idx) => {
+          // Improved pick function to support lowercase and alternate names
           const pick = (o, keys) => {
             for (const k of keys) {
               if (o[k] !== undefined && o[k] !== null && o[k] !== '') return o[k];
@@ -132,24 +133,24 @@ export async function upsertPortfolio(req, res) {
             return undefined;
           };
 
-          let symbol = (pick(r, ['Symbol','Ticker','Asset','Security','Instrument']) || '')
+          let symbol = (pick(r, ['Symbol','symbol','Ticker','Asset','Security','Instrument']) || '')
             .toString()
             .trim()
             .toUpperCase();
 
-          let name = (pick(r, ['Name','SecurityName','Description']) || '').toString().trim();
+          let name = (pick(r, ['Name','name','SecurityName','Description']) || '').toString().trim();
 
           // Derive symbol if missing
           if (!symbol && name) {
             const first = name.split(/[^A-Za-z0-9]+/)[0];
-            if (first.length >= 1 && first.length <= 6) symbol = first.toUpperCase();
+            if (first.length >= 1 && first.length <= 8) symbol = first.toUpperCase();
           }
           if (!name && symbol) name = symbol;
 
-          const quantity = Number(pick(r, ['Quantity','Shares','Units','Qty'])) || 0;
-          let avgPrice = Number(pick(r, ['AvgPrice','Price','CostBasisPerShare'])) || 0;
+          const quantity = Number(pick(r, ['Quantity','quantity','Shares','shares','Units','Qty'])) || 0;
+          let avgPrice = Number(pick(r, ['AvgPrice','avgPrice','Price','price','CostBasisPerShare'])) || 0;
           if (!avgPrice) {
-            const totalValue = Number(pick(r, ['Value','MarketValue','CurrentValue'])) || 0;
+            const totalValue = Number(pick(r, ['Value','value','MarketValue','CurrentValue'])) || 0;
             if (totalValue && quantity) avgPrice = totalValue / quantity;
           }
           const targetAllocation = Number(pick(r, ['TargetAllocation','Allocation','Weight'])) || 0;
@@ -180,10 +181,9 @@ export async function upsertPortfolio(req, res) {
           p.avgPrice = p.avgPrice || 0;
           return p;
         });
-    }
 
     if (positions.length) {
-      console.log('Imported positions (sanitized):', positions.map(x => ({ symbol: x.symbol, name: x.name })));
+      console.log('Imported positions (sanitized):', positions.map(x => ({ symbol: x.symbol, quantity: x.quantity, avgPrice: x.avgPrice, name: x.name })));
     }
 
     let p = await Portfolio.findOne({ userId: req.user.id });
