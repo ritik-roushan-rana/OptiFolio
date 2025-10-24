@@ -107,70 +107,74 @@ export async function upsertPortfolio(req, res) {
       const sheet = wb.Sheets[wb.SheetNames[0]];
       const rows = xlsx.utils.sheet_to_json(sheet, { defval: null });
 
+      // Improved pick function to support lowercase and alternate names
       const pick = (o, keys) => {
         for (const k of keys) {
           if (o[k] !== undefined && o[k] !== null && o[k] !== '') return o[k];
           const kl = k.toLowerCase();
           if (o[kl] !== undefined && o[kl] !== null && o[kl] !== '') return o[kl];
         }
+        // Try fuzzy match: find first key containing the search string
+        for (const k of Object.keys(o)) {
+          for (const search of keys) {
+            if (k.toLowerCase().includes(search.toLowerCase()) && o[k] !== undefined && o[k] !== null && o[k] !== '') {
+              return o[k];
+            }
+          }
+        }
         return undefined;
       };
 
       positions = rows
-        .filter(r => {
-          const ent = (r.entity || r.Entity || '').toString().toLowerCase();
-          return !r.entity || !ent || ent === 'holding';
-        })
         .map((r, idx) => {
-          // Improved pick function to support lowercase and alternate names
-          const pick = (o, keys) => {
-            for (const k of keys) {
-              if (o[k] !== undefined && o[k] !== null && o[k] !== '') return o[k];
-              const kl = k.toLowerCase();
-              if (o[kl] !== undefined && o[kl] !== null && o[kl] !== '') return o[kl];
-            }
-            return undefined;
-          };
-
-          let symbol = (pick(r, ['Symbol','symbol','Ticker','Asset','Security','Instrument']) || '')
-            .toString()
-            .trim()
-            .toUpperCase();
-
+          // Debug log raw row
+          console.log('Raw portfolio row:', r);
+          let symbol = (pick(r, ['Symbol','symbol','Ticker','Asset','Security','Instrument']) || '').toString().trim().toUpperCase();
           let name = (pick(r, ['Name','name','SecurityName','Description']) || '').toString().trim();
 
           // Derive symbol if missing
           if (!symbol && name) {
-            const first = name.split(/[^A-Za-z0-9]+/)[0];
-            if (first.length >= 1 && first.length <= 8) symbol = first.toUpperCase();
+            // Use first alphanumeric substring up to 8 chars
+            const match = name.match(/[A-Za-z0-9]{1,8}/);
+            if (match) symbol = match[0].toUpperCase();
           }
           if (!name && symbol) name = symbol;
 
-          const quantity = Number(pick(r, ['Quantity','quantity','Shares','shares','Units','Qty'])) || 0;
-          let avgPrice = Number(pick(r, ['AvgPrice','avgPrice','Price','price','CostBasisPerShare'])) || 0;
+          let quantity = Number(pick(r, ['Quantity','quantity','Shares','shares','Units','Qty']));
+          if (isNaN(quantity)) quantity = 0;
+          let avgPrice = Number(pick(r, ['AvgPrice','avgPrice','Price','price','CostBasisPerShare']));
+          if (isNaN(avgPrice)) avgPrice = 0;
           if (!avgPrice) {
-            const totalValue = Number(pick(r, ['Value','value','MarketValue','CurrentValue'])) || 0;
+            const totalValue = Number(pick(r, ['Value','value','MarketValue','CurrentValue']));
             if (totalValue && quantity) avgPrice = totalValue / quantity;
           }
-          const targetAllocation = Number(pick(r, ['TargetAllocation','Allocation','Weight'])) || 0;
+          const targetAllocation = Number(pick(r, ['TargetAllocation','Allocation','Weight']));
 
-          // Always sanitize symbol before storing
-          symbol = symbol.trim().toUpperCase();
+          // Always sanitize symbol and name before storing
+          symbol = symbol.replace(/[^A-Z0-9]/g, '').trim().toUpperCase();
+          name = name.replace(/[^A-Za-z0-9 ]/g, '').trim();
+
+          // Debug log sanitized row
+          console.log('Sanitized portfolio row:', { symbol, name, quantity, avgPrice, targetAllocation });
 
           return {
             symbol,
             name,
             quantity,
             avgPrice: Number(avgPrice.toFixed(2)),
-            targetAllocation,
+            targetAllocation: isNaN(targetAllocation) ? 0 : targetAllocation,
             currentAllocation: 0
           };
+        })
+        .filter(r => {
+          const ent = (r.entity || r.Entity || '').toString().toLowerCase();
+          return !r.entity || !ent || ent === 'holding';
         })
         .filter(p => (p.symbol || p.name)) // keep if at least name present
         .map((p, idx) => {
           if (!p.symbol && p.name) {
-            const first = p.name.split(/[^A-Za-z0-9]+/)[0];
-            if (first) p.symbol = first.substring(0, 8).toUpperCase();
+            const match = p.name.match(/[A-Za-z0-9]{1,8}/);
+            if (match) p.symbol = match[0].toUpperCase();
           }
           if (!p.symbol && !p.name) {
             p.symbol = `ASSET${idx + 1}`;
