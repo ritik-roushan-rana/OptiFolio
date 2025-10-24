@@ -154,6 +154,9 @@ export async function upsertPortfolio(req, res) {
           }
           const targetAllocation = Number(pick(r, ['TargetAllocation','Allocation','Weight'])) || 0;
 
+          // Always sanitize symbol before storing
+          symbol = symbol.trim().toUpperCase();
+
           return {
             symbol,
             name,
