@@ -77,7 +77,7 @@ export async function getRecommendations(req, res) {
   }
 }
 
-// Only update portfolio, do NOT call RL model here
+// --- OPTIMIZED APPLY: fast, no RL call ---
 export async function applyRebalance(req, res) {
   try {
     const userId = req.user.id;
@@ -101,19 +101,19 @@ export async function applyRebalance(req, res) {
       }
     });
     await portfolio.save();
-    // FAST: Do not call RL model here
     res.json({ message: 'Rebalance actions applied', updated });
   } catch (e) {
     res.status(500).json({ message: e.message });
   }
 }
 
-// Only update ignored list, do NOT call RL model here
+// --- OPTIMIZED IGNORE: atomic, fast, no RL call ---
 export async function ignoreRebalance(req, res) {
   try {
     const userId = req.user.id;
     const { symbol } = req.body;
     if (!symbol) return res.status(400).json({ message: 'Symbol required' });
+    // Use atomic $addToSet for fast update
     const result = await Portfolio.updateOne(
       { userId },
       { $addToSet: { ignoredRebalances: symbol } }
