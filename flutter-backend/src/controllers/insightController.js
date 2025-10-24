@@ -30,13 +30,18 @@ export const deleteInsight = async (req, res) => {
 };
 
 // Frontend data endpoints
-export const riskReturnData = async (_req, res) => {
-  const docs = await Insight.find().limit(50);
+export const riskReturnData = async (req, res) => {
+  // Get user's portfolio
+  const userId = req.user?.id;
+  if (!userId) return res.json([]);
+  const portfolio = await Portfolio.findOne({ userId });
+  if (!portfolio || !portfolio.positions) return res.json([]);
+  // Use dayChangePct as risk, gainPct as return if available, else fallback to 0
   res.json(
-    docs.map(d => ({
-      asset: d.asset || d.symbol || 'N/A',
-      risk: num(d.risk ?? d.volatility ?? Math.random() * 20),
-      returnRate: num(d.returnRate ?? d.avgReturn ?? Math.random() * 15),
+    portfolio.positions.map(pos => ({
+      asset: pos.symbol || pos.name || 'N/A',
+      risk: typeof pos.dayChangePct === 'number' ? pos.dayChangePct : 0,
+      returnRate: typeof pos.gainPct === 'number' ? pos.gainPct : 0,
     }))
   );
 };
