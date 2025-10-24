@@ -31,8 +31,8 @@ export async function getRecommendations(req, res) {
 
     // Map weights to frontend recommendation format
     const recommendations = Object.entries(weights).map(([symbol, targetWeight]) => {
-      // Find the position for this symbol
-      const position = portfolio.positions.find(p => p.symbol === symbol);
+      // Case-insensitive, trimmed symbol match
+      const position = portfolio.positions.find(p => (p.symbol || '').trim().toUpperCase() === symbol.trim().toUpperCase());
       if (position) {
         console.log(`Symbol: ${symbol}, Quantity: ${position.quantity}, AvgPrice: ${position.avgPrice}`);
       } else {
