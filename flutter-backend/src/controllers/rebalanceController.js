@@ -73,6 +73,33 @@ export async function getRecommendations(req, res) {
 }
 
 export async function applyRebalance(req, res) {
-  // Stub: in a real system you would execute trades / update positions.
-  res.json({ message: 'Rebalance actions acknowledged', count: (req.body?.actions || []).length });
+  try {
+    const userId = req.user.id;
+    const actions = req.body?.actions || [];
+    const portfolio = await Portfolio.findOne({ userId });
+    if (!portfolio) {
+      return res.status(404).json({ message: 'Portfolio not found' });
+    }
+    let updated = 0;
+    actions.forEach(action => {
+      const symbol = (action.symbol || '').trim().toUpperCase();
+      const position = portfolio.positions.find(p => (p.symbol || '').trim().toUpperCase() === symbol);
+      if (position) {
+        // For a real system, you would execute trades here.
+        // For now, just update the quantity based on action and amount.
+        // Assume amount is the value to buy/sell, so convert to shares:
+        const sharesChange = action.avgPrice && action.avgPrice > 0 ? action.amount / action.avgPrice : 0;
+        if (action.action === 'buy') {
+          position.quantity += sharesChange;
+        } else if (action.action === 'sell') {
+          position.quantity = Math.max(0, position.quantity - sharesChange);
+        }
+        updated++;
+      }
+    });
+    await portfolio.save();
+    res.json({ message: 'Rebalance actions applied', updated });
+  } catch (e) {
+    res.status(500).json({ message: e.message });
+  }
 }
