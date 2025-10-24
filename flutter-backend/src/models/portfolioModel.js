@@ -6,7 +6,9 @@ const positionSchema = new mongoose.Schema({
   quantity: Number,
   avgPrice: Number,
   targetAllocation: Number,
-  currentAllocation: Number
+  currentAllocation: Number,
+  dayChangePct: Number, // <-- Added for risk
+  gainPct: Number      // <-- Added for return
 });
 
 const portfolioSchema = new mongoose.Schema({
