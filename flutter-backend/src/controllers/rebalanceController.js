@@ -77,7 +77,6 @@ export async function getRecommendations(req, res) {
   }
 }
 
-// --- OPTIMIZED APPLY: fast, no RL call ---
 export async function applyRebalance(req, res) {
   try {
     const userId = req.user.id;
@@ -91,6 +90,9 @@ export async function applyRebalance(req, res) {
       const symbol = (action.symbol || '').trim().toUpperCase();
       const position = portfolio.positions.find(p => (p.symbol || '').trim().toUpperCase() === symbol);
       if (position) {
+        // For a real system, you would execute trades here.
+        // For now, just update the quantity based on action and amount.
+        // Assume amount is the value to buy/sell, so convert to shares:
         const sharesChange = action.avgPrice && action.avgPrice > 0 ? action.amount / action.avgPrice : 0;
         if (action.action === 'buy') {
           position.quantity += sharesChange;
@@ -100,6 +102,8 @@ export async function applyRebalance(req, res) {
         updated++;
       }
     });
+    console.log('Applied rebalance actions:', actions);
+    console.log('Updated portfolio positions:', portfolio.positions);
     await portfolio.save();
     res.json({ message: 'Rebalance actions applied', updated });
   } catch (e) {
@@ -107,18 +111,19 @@ export async function applyRebalance(req, res) {
   }
 }
 
-// --- OPTIMIZED IGNORE: atomic, fast, no RL call ---
 export async function ignoreRebalance(req, res) {
   try {
     const userId = req.user.id;
     const { symbol } = req.body;
     if (!symbol) return res.status(400).json({ message: 'Symbol required' });
-    // Use atomic $addToSet for fast update
-    const result = await Portfolio.updateOne(
-      { userId },
-      { $addToSet: { ignoredRebalances: symbol } }
-    );
-    if (result.modifiedCount > 0) {
+    const portfolio = await Portfolio.findOne({ userId });
+    if (!portfolio) return res.status(404).json({ message: 'Portfolio not found' });
+    // Mark ignored in a new ignoredRebalances array (add if not present)
+    portfolio.ignoredRebalances = portfolio.ignoredRebalances || [];
+    if (!portfolio.ignoredRebalances.includes(symbol)) {
+      portfolio.ignoredRebalances.push(symbol);
+      await portfolio.save();
+      console.log(`Ignored rebalance for symbol: ${symbol}`);
       return res.json({ message: `Rebalance for ${symbol} ignored.` });
     }
     return res.json({ message: `Rebalance for ${symbol} already ignored.` });
