@@ -11,6 +11,9 @@ export async function getRecommendations(req, res) {
       return res.json([]);
     }
 
+    // Calculate total portfolio value
+    const totalValue = portfolio.positions.reduce((sum, p) => sum + ((p.quantity || 0) * (p.avgPrice || 0)), 0);
+
     // Extract asset symbols from positions
     const assets = portfolio.positions
       .filter(p => (p.quantity || 0) > 0 && (p.avgPrice || 0) >= 0)
@@ -22,15 +25,21 @@ export async function getRecommendations(req, res) {
     const weights = rlResponse.data.weights || {};
 
     // Map weights to frontend recommendation format
-    const recommendations = Object.entries(weights).map(([symbol, targetWeight]) => ({
-      symbol,
-      name: symbol,
-      currentWeight: 0, // You can fetch actual current weight if available
-      targetWeight,
-      amount: 0, // You can fetch actual amount if available
-      action: targetWeight > 0 ? 'buy' : 'sell', // Simple logic, adjust as needed
-      reason: 'RL recommendation'
-    }));
+    const recommendations = Object.entries(weights).map(([symbol, targetWeight]) => {
+      // Find the position for this symbol
+      const position = portfolio.positions.find(p => p.symbol === symbol);
+      // Calculate current weight
+      const currentWeight = position && totalValue > 0 ? ((position.quantity * position.avgPrice) / totalValue) * 100 : 0;
+      return {
+        symbol,
+        name: symbol,
+        currentWeight: parseFloat(currentWeight.toFixed(2)),
+        targetWeight,
+        amount: 0, // You can fetch actual amount if available
+        action: targetWeight > 0 ? 'buy' : 'sell', // Simple logic, adjust as needed
+        reason: 'RL recommendation'
+      };
+    });
 
     res.json(recommendations);
   } catch (e) {

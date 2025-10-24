@@ -3,7 +3,7 @@ import numpy as np
 import re
 
 class PortfolioEnv(gym.Env):
-    def __init__(self, data, initial_cash=100000, initial_portfolio=None):
+    def __init__(self, data, initial_cash=100000):
         super().__init__()
         self.data = data
         self.initial_cash = initial_cash
@@ -13,14 +13,13 @@ class PortfolioEnv(gym.Env):
         self.n_assets = len(self.asset_names)
         self.action_space = gym.spaces.Box(low=-1, high=1, shape=(self.n_assets,), dtype=np.float32)
         self.observation_space = gym.spaces.Box(low=0, high=np.inf, shape=(self.n_assets * 3,), dtype=np.float32)
-        self.initial_portfolio = initial_portfolio if initial_portfolio is not None else np.zeros(self.n_assets)
         self.reset()
 
     def reset(self):
         self.current_step = 0
         self.cash = self.initial_cash
-        self.portfolio = self.initial_portfolio.copy() if hasattr(self, 'initial_portfolio') else np.zeros(self.n_assets)
-        self.prev_portfolio = self.portfolio.copy()
+        self.portfolio = np.zeros(self.n_assets)
+        self.prev_portfolio = np.zeros(self.n_assets)
         self.prev_cash = self.initial_cash
         return self._get_obs()
 
