@@ -112,13 +112,14 @@ export async function ignoreRebalance(req, res) {
     const userId = req.user.id;
     const { symbol } = req.body;
     if (!symbol) return res.status(400).json({ message: 'Symbol required' });
-    const portfolio = await Portfolio.findOne({ userId });
-    if (!portfolio) return res.status(404).json({ message: 'Portfolio not found' });
-    portfolio.ignoredRebalances = portfolio.ignoredRebalances || [];
-    if (!portfolio.ignoredRebalances.includes(symbol)) {
-      portfolio.ignoredRebalances.push(symbol);
-      await portfolio.save();
-      // FAST: Do not recompute RL here, just return success
+
+    // Use $addToSet for atomic update
+    const result = await Portfolio.updateOne(
+      { userId },
+      { $addToSet: { ignoredRebalances: symbol } }
+    );
+
+    if (result.modifiedCount > 0) {
       return res.json({ message: `Rebalance for ${symbol} ignored.` });
     }
     return res.json({ message: `Rebalance for ${symbol} already ignored.` });
