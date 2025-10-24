@@ -35,25 +35,27 @@ export async function getRecommendations(req, res) {
 
     // Map weights to frontend recommendation format
     const recommendations = Object.entries(weights).map(([symbol, targetWeight]) => {
+      // Always sanitize RL output symbol before matching
+      const sanitizedSymbol = symbol.trim().toUpperCase();
       // Try to match symbol strictly, then fallback to fuzzy match
-      let position = portfolio.positions.find(p => (p.symbol || '').trim().toUpperCase() === symbol.trim().toUpperCase());
+      let position = portfolio.positions.find(p => (p.symbol || '').trim().toUpperCase() === sanitizedSymbol);
       if (!position) {
         // Fuzzy match: try includes, startsWith, endsWith
-        position = portfolio.positions.find(p => (p.symbol || '').toUpperCase().includes(symbol.trim().toUpperCase()));
+        position = portfolio.positions.find(p => (p.symbol || '').toUpperCase().includes(sanitizedSymbol));
       }
       if (!position) {
-        position = portfolio.positions.find(p => (symbol.trim().toUpperCase()).includes((p.symbol || '').toUpperCase()));
+        position = portfolio.positions.find(p => sanitizedSymbol.includes((p.symbol || '').toUpperCase()));
       }
       if (position) {
-        console.log(`MATCHED Symbol: ${symbol}, Quantity: ${position.quantity}, AvgPrice: ${position.avgPrice}`);
+        console.log(`MATCHED Symbol: ${sanitizedSymbol}, Quantity: ${position.quantity}, AvgPrice: ${position.avgPrice}`);
       } else {
-        console.log(`Symbol: ${symbol} not found in portfolio positions.`);
+        console.log(`Symbol: ${sanitizedSymbol} not found in portfolio positions.`);
       }
       // Calculate current weight
       const currentWeight = position && totalValue > 0 ? ((position.quantity * position.avgPrice) / totalValue) * 100 : 0;
       return {
-        symbol,
-        name: symbol,
+        symbol: sanitizedSymbol,
+        name: sanitizedSymbol,
         currentWeight: parseFloat(currentWeight.toFixed(2)),
         targetWeight,
         amount: 0, // You can fetch actual amount if available
