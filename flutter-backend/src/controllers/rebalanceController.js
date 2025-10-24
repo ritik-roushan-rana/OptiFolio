@@ -14,6 +14,9 @@ export async function getRecommendations(req, res) {
     // Calculate total portfolio value
     const totalValue = portfolio.positions.reduce((sum, p) => sum + ((p.quantity || 0) * (p.avgPrice || 0)), 0);
 
+    console.log('Total portfolio value:', totalValue);
+    console.log('Portfolio positions:', portfolio.positions);
+
     // Extract asset symbols from positions
     const assets = portfolio.positions
       .filter(p => (p.quantity || 0) > 0 && (p.avgPrice || 0) >= 0)
@@ -24,10 +27,17 @@ export async function getRecommendations(req, res) {
     const rlResponse = await axios.post(`${rlApiUrl}/rl-rebalance`, { assets });
     const weights = rlResponse.data.weights || {};
 
+    console.log('RL weights:', weights);
+
     // Map weights to frontend recommendation format
     const recommendations = Object.entries(weights).map(([symbol, targetWeight]) => {
       // Find the position for this symbol
       const position = portfolio.positions.find(p => p.symbol === symbol);
+      if (position) {
+        console.log(`Symbol: ${symbol}, Quantity: ${position.quantity}, AvgPrice: ${position.avgPrice}`);
+      } else {
+        console.log(`Symbol: ${symbol} not found in portfolio positions.`);
+      }
       // Calculate current weight
       const currentWeight = position && totalValue > 0 ? ((position.quantity * position.avgPrice) / totalValue) * 100 : 0;
       return {
