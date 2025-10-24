@@ -29,12 +29,23 @@ export async function getRecommendations(req, res) {
 
     console.log('RL weights:', weights);
 
+    // DEBUG: Print RL symbols and all portfolio symbols for troubleshooting
+    console.log('RL symbols:', Object.keys(weights));
+    console.log('Portfolio symbols:', portfolio.positions.map(p => p.symbol));
+
     // Map weights to frontend recommendation format
     const recommendations = Object.entries(weights).map(([symbol, targetWeight]) => {
-      // Case-insensitive, trimmed symbol match
-      const position = portfolio.positions.find(p => (p.symbol || '').trim().toUpperCase() === symbol.trim().toUpperCase());
+      // Try to match symbol strictly, then fallback to fuzzy match
+      let position = portfolio.positions.find(p => (p.symbol || '').trim().toUpperCase() === symbol.trim().toUpperCase());
+      if (!position) {
+        // Fuzzy match: try includes, startsWith, endsWith
+        position = portfolio.positions.find(p => (p.symbol || '').toUpperCase().includes(symbol.trim().toUpperCase()));
+      }
+      if (!position) {
+        position = portfolio.positions.find(p => (symbol.trim().toUpperCase()).includes((p.symbol || '').toUpperCase()));
+      }
       if (position) {
-        console.log(`Symbol: ${symbol}, Quantity: ${position.quantity}, AvgPrice: ${position.avgPrice}`);
+        console.log(`MATCHED Symbol: ${symbol}, Quantity: ${position.quantity}, AvgPrice: ${position.avgPrice}`);
       } else {
         console.log(`Symbol: ${symbol} not found in portfolio positions.`);
       }
