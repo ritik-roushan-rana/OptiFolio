@@ -33,8 +33,12 @@ export async function getRecommendations(req, res) {
     console.log('RL symbols:', Object.keys(weights));
     console.log('Portfolio symbols:', portfolio.positions.map(p => p.symbol));
 
+    // Filter out ignored recommendations
+    const ignored = portfolio.ignoredRebalances || [];
     // Map weights to frontend recommendation format
-    const recommendations = Object.entries(weights).map(([symbol, targetWeight]) => {
+    const recommendations = Object.entries(weights)
+      .filter(([symbol]) => !ignored.includes(symbol.trim().toUpperCase()))
+      .map(([symbol, targetWeight]) => {
       // Always sanitize RL output symbol before matching
       const sanitizedSymbol = symbol.trim().toUpperCase();
       // Try to match symbol strictly, then fallback to fuzzy match
