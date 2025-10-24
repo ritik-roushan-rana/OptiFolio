@@ -110,7 +110,6 @@ export async function upsertPortfolio(req, res) {
       const pick = (o, keys) => {
         for (const k of keys) {
           if (o[k] !== undefined && o[k] !== null && o[k] !== '') return o[k];
-          // also try lowercase key if not already
           const kl = k.toLowerCase();
           if (o[kl] !== undefined && o[kl] !== null && o[kl] !== '') return o[kl];
         }
@@ -181,6 +180,7 @@ export async function upsertPortfolio(req, res) {
           p.avgPrice = p.avgPrice || 0;
           return p;
         });
+    }
 
     if (positions.length) {
       console.log('Imported positions (sanitized):', positions.map(x => ({ symbol: x.symbol, quantity: x.quantity, avgPrice: x.avgPrice, name: x.name })));
