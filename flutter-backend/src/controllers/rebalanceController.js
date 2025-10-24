@@ -53,13 +53,15 @@ export async function getRecommendations(req, res) {
       }
       // Calculate current weight
       const currentWeight = position && totalValue > 0 ? ((position.quantity * position.avgPrice) / totalValue) * 100 : 0;
+      // Calculate rebalance amount (difference in value)
+      const amount = position && totalValue > 0 ? Math.abs(((targetWeight - currentWeight) / 100) * totalValue) : 0;
       return {
         symbol: sanitizedSymbol,
         name: sanitizedSymbol,
         currentWeight: parseFloat(currentWeight.toFixed(2)),
         targetWeight,
-        amount: 0, // You can fetch actual amount if available
-        action: targetWeight > 0 ? 'buy' : 'sell', // Simple logic, adjust as needed
+        amount: parseFloat(amount.toFixed(2)), // Show actual rebalance amount
+        action: targetWeight > currentWeight ? 'buy' : 'sell',
         reason: 'RL recommendation'
       };
     });
