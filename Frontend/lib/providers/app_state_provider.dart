@@ -293,11 +293,17 @@ class AppStateProvider extends ChangeNotifier {
   }
 
   Future<void> applyRebalanceAndRefresh(List<RebalanceRecommendation> recs) async {
+    // Optimistically remove applied stocks for instant UI
+    _rebalancingSuggestions.removeWhere((r) => recs.any((applied) => applied.symbol == r.symbol));
+    safeNotifyListeners();
     await _rebalancingService.applyRebalance(recs);
     await loadRebalancingSuggestions();
   }
 
   Future<void> ignoreRebalanceAndRefresh(String symbol) async {
+    // Optimistically remove ignored stock for instant UI
+    _rebalancingSuggestions.removeWhere((r) => r.symbol == symbol);
+    safeNotifyListeners();
     await _rebalancingService.ignoreRebalance(symbol);
     await loadRebalancingSuggestions();
   }

@@ -14,6 +14,7 @@ const portfolioSchema = new mongoose.Schema({
   portfolioName: String,
   description: String,
   positions: [positionSchema],
+  ignoredRebalances: { type: [String], default: [] },
   createdAt: { type: Date, default: Date.now }
 });
 
