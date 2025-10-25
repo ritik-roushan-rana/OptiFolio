@@ -12,13 +12,14 @@ export async function getQuote(req, res) {
   const { symbol } = req.params;
   if (!symbol) return res.status(400).json({ message: 'Missing symbol' });
 
-  const previousClose = randomWithin(100, 0.02);
-  const current = randomWithin(previousClose, 0.02);
+  // Increase the random delta for more visible price changes
+  const previousClose = randomWithin(100, 0.10); // 10% range
+  const current = randomWithin(previousClose, 0.10); // 10% range
   const change = Number((current - previousClose).toFixed(2));
   const percent = Number(((change / previousClose) * 100).toFixed(2));
-  const high = Math.max(current, previousClose) + Number((Math.random() * 1.5).toFixed(2));
-  const low = Math.min(current, previousClose) - Number((Math.random() * 1.5).toFixed(2));
-  const open = randomWithin(previousClose, 0.01);
+  const high = Math.max(current, previousClose) + Number((Math.random() * 3).toFixed(2));
+  const low = Math.min(current, previousClose) - Number((Math.random() * 3).toFixed(2));
+  const open = randomWithin(previousClose, 0.05); // 5% range
 
   // Shape expected by StockQuote.fromJson (c,d,dp,h,l,o,pc)
   res.json({
