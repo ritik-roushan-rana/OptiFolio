@@ -1,4 +1,5 @@
 import Portfolio from '../models/portfolioModel.js';
+import axios from 'axios';
 
 /**
  * Shape returned (matches Frontend PortfolioData / AssetData models):
@@ -28,19 +29,38 @@ export async function getPortfolioData(req, res) {
       return res.json(emptyResponse());
     }
 
-    // Derive holdings
-    const holdingsRaw = portfolio.positions.map(p => {
-      const value = (p.quantity || 0) * (p.avgPrice || 0);
-      // Mock daily change percent between -3% and +3%
-      const changePercent = Number(((Math.random() - 0.5) * 6).toFixed(2));
-      return {
-        symbol: p.symbol || '',
-        name: p.name || p.symbol || '',
-        value,
-        changePercent,
-        iconUrl: `https://logo.clearbit.com/${(p.symbol || 'example').toLowerCase()}.com`
-      };
-    });
+    // --- Fetch real-time prices for each holding using your API ---
+    const RL_API_URL = process.env.RL_API_URL || 'http://15.206.217.186:8001';
+    async function fetchPriceData(symbol) {
+      try {
+        // Assuming your API exposes /api/quote/:symbol returning { c: current, pc: previousClose }
+        const response = await axios.get(`${RL_API_URL}/api/quote/${encodeURIComponent(symbol)}`);
+        const { c: latestPrice, pc: previousClose } = response.data;
+        return { latestPrice, previousClose };
+      } catch (err) {
+        // Fallback: treat avgPrice as both latest and previous close if API fails
+        return { latestPrice: null, previousClose: null };
+      }
+    }
+
+    // Derive holdings with real price data
+    const holdingsRaw = await Promise.all(
+      portfolio.positions.map(async p => {
+        const { latestPrice, previousClose } = await fetchPriceData(p.symbol);
+        // Fallback to avgPrice if API fails
+        const price = latestPrice ?? p.avgPrice ?? 0;
+        const prev = previousClose ?? p.avgPrice ?? 0;
+        const value = (p.quantity || 0) * price;
+        const changePercent = prev ? (((price - prev) / prev) * 100).toFixed(2) : '0.00';
+        return {
+          symbol: p.symbol || '',
+          name: p.name || p.symbol || '',
+          value,
+          changePercent: Number(changePercent),
+          iconUrl: `https://logo.clearbit.com/${(p.symbol || 'example').toLowerCase()}.com`
+        };
+      })
+    );
 
     const totalValue = holdingsRaw.reduce((s, h) => s + h.value, 0);
     // Assign percentage
@@ -49,7 +69,7 @@ export async function getPortfolioData(req, res) {
       percentage: totalValue > 0 ? Number(((h.value / totalValue) * 100).toFixed(2)) : 0
     }));
 
-    // Mock P/L (valueChange) as sum(value * changePercent/100)
+    // Calculate valueChange and valueChangePercent based on real price data
     const valueChange = holdings.reduce((s, h) => s + h.value * (h.changePercent / 100), 0);
     const valueChangePercent = totalValue > 0 ? (valueChange / (totalValue - valueChange)) * 100 : 0;
 
