@@ -26,7 +26,7 @@ export async function getPortfolioData(req, res) {
     return res.json(emptyPortfolio());
   }
 
-  const holdingsRaw = await Promise.all(p.positions.map(async (pos, idx) => {
+  const holdingsRaw = p.positions.map((pos, idx) => {
     let symbol = (pos.symbol || '').toString().trim().toUpperCase();
     let name = (pos.name || '').toString().trim();
 
@@ -42,26 +42,8 @@ export async function getPortfolioData(req, res) {
     }
 
     const value = (pos.quantity || 0) * (pos.avgPrice || 0);
-    // --- LIVE PRICE FETCH & CHANGE PERCENT CALCULATION ---
-    let changePercent = 0;
-    try {
-      // Use Finnhub free API (or any other) for live price
-      // You must set FINNHUB_API_KEY in your .env
-      const apiKey = process.env.FINNHUB_API_KEY;
-      if (apiKey && symbol) {
-        const fetch = (await import('node-fetch')).default;
-        const url = `https://finnhub.io/api/v1/quote?symbol=${symbol}&token=${apiKey}`;
-        const resp = await fetch(url);
-        const data = await resp.json();
-        const currentPrice = data.c;
-        if (currentPrice && pos.avgPrice) {
-          changePercent = Number((((currentPrice - pos.avgPrice) / pos.avgPrice) * 100).toFixed(2));
-        }
-      }
-    } catch (e) {
-      // fallback to 0 if API fails
-      changePercent = 0;
-    }
+    // Use actual changePercent from CSV or database if available
+    const changePercent = typeof pos.dayChangePct === 'number' ? pos.dayChangePct : 0;
 
     return {
       // core
@@ -76,7 +58,7 @@ export async function getPortfolioData(req, res) {
       changePercent,
       iconUrl: `https://logo.clearbit.com/${symbol.toLowerCase()}.com`
     };
-  }));
+  });
 
   const totalValue = holdingsRaw.reduce((s, h) => s + h.value, 0);
   const holdings = holdingsRaw.map(h => ({
