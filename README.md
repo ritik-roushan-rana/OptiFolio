@@ -258,28 +258,6 @@ Authorization: Bearer <token>
 
 ---
 
-## Deployment Notes
-- Do not commit `.env` files.
-- Flutter prod builds: `flutter build ios` / `flutter build apk`.
-- Backend: use reverse proxy (e.g., nginx) + HTTPS.
-- Cache heavy analytics endpoints where possible.
-
----
-
-## Adding Screenshots
-You provided seven PNGs. Place them in `Frontend/assets/images/` with the same names so the gallery renders:
-- `portfolio_screen.png`
-- `portfolio.png`
-- `rebalance_screen.png`
-- `stock_screen.png`
-- `chatbot.png`
-- `analytics.png`
-- `news.png`
-
-If your files are elsewhere (e.g., Downloads), copy them into the path above and commit them. Images must be tracked in the repo for GitHub to show them.
-
----
-
 ## Roadmap
 - Integration tests
 - Web build pipeline
