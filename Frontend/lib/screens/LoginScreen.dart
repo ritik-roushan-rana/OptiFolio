@@ -55,6 +55,8 @@ class _LoginScreenState extends State<LoginScreen> {
         email: session.email,
         phone: '', // no phone in session; update if you add it
       );
+      // Ensure default landing tab and overlays are reset
+      appState.resetOverlaysAndTab();
 
       final hasPortfolio = await appState.checkForExistingPortfolio();
       // Give the platform a beat to finish closing keyboard before navigating
@@ -103,6 +105,8 @@ class _LoginScreenState extends State<LoginScreen> {
         email: session.email,
         phone: '', // no phone in session; update if you add it
       );
+      // Ensure default landing tab and overlays are reset
+      appState.resetOverlaysAndTab();
 
       final hasPortfolio = await appState.checkForExistingPortfolio();
       await Future.delayed(const Duration(milliseconds: 80));

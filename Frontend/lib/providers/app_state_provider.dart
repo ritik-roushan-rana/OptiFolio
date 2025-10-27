@@ -122,6 +122,8 @@ class AppStateProvider extends ChangeNotifier {
             phone: '',
           );
         }
+        // Ensure default landing is Portfolio and overlays are closed
+        resetOverlaysAndTab();
         loadAll();
         loadSettings();
       } else {
@@ -138,6 +140,8 @@ class AppStateProvider extends ChangeNotifier {
         email: u.email,
         phone: '',
       );
+      // Ensure UI state is default on cold start as well
+      resetOverlaysAndTab();
       loadAll();
     }
   }
@@ -167,6 +171,14 @@ class AppStateProvider extends ChangeNotifier {
     _userName = null;
     _email = null;
     _phone = null;
+    // Reset UI flags and land on Portfolio tab
+    _currentTabIndex = 0;
+    _showSettings = false;
+    _showSearch = false;
+    _showAccountSettings = false;
+    _showNotificationsSettings = false;
+    _showPrivacySettings = false;
+    _showAppearanceSettings = false;
     safeNotifyListeners();
   }
 
@@ -182,6 +194,18 @@ class AppStateProvider extends ChangeNotifier {
 
   void setCurrentTab(int index) {
     _currentTabIndex = index;
+    safeNotifyListeners();
+  }
+
+  // Helper: close all overlays and set tab to Portfolio
+  void resetOverlaysAndTab() {
+    _currentTabIndex = 0;
+    _showSettings = false;
+    _showSearch = false;
+    _showAccountSettings = false;
+    _showNotificationsSettings = false;
+    _showPrivacySettings = false;
+    _showAppearanceSettings = false;
     safeNotifyListeners();
   }
 
