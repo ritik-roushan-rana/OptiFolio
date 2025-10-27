@@ -4,7 +4,7 @@ import cors from 'cors';
 import morgan from 'morgan';
 import { connectDB } from './db.js';
 
-// Debug environment variables
+// Debug environment 
 console.log('Environment variables loaded:');
 console.log('JWT_SECRET:', process.env.JWT_SECRET ? `${process.env.JWT_SECRET.slice(0, 10)}...` : 'NOT SET');
 console.log('MONGODB_URI:', process.env.MONGODB_URI ? 'SET' : 'NOT SET');
@@ -69,7 +69,7 @@ app.use('/api/search', searchRoutes);
 app.use('/api/backtests', backtestRoutes);
 app.use('/api/settings', settingsRoutes);
 
-// Chatbot API Route
+// chatbot routes coming last
 app.use('/api', chatbotRoutes);
 
 app.use((_, res) => res.status(404).json({ message: 'Not found' }));
