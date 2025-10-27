@@ -8,9 +8,35 @@ function emptyPortfolio() {
     valueChange: 0,
     valueChangePercent: 0,
     riskScore: 0,
-    performanceHistory: { '1M': [], '3M': [], '1Y': [] },
+    performanceHistory: { '1D': [], '1W': [], '1M': [], '3M': [], '6M': [], '1Y': [] },
     holdings: []
   };
+}
+
+// --- helpers to generate realistic history and risk ---
+function series(start, points, drift) {
+  let v = start || 10000;
+  return Array.from({ length: points }).map(() => {
+    const change = v * ((Math.random() - 0.5) * drift);
+    v += change;
+    return Number(v.toFixed(2));
+  });
+}
+function mockPerformanceHistory(base) {
+  const b = base || 10000;
+  return {
+    '1D': series(b, 6, 0.001),
+    '1W': series(b, 7, 0.004),
+    '1M': series(b, 30, 0.006),
+    '3M': series(b, 13, 0.01),
+    '6M': series(b, 26, 0.012),
+    '1Y': series(b, 52, 0.015),
+  };
+}
+function variance(arr) {
+  if (!arr || !arr.length) return 0;
+  const mean = arr.reduce((s, v) => s + v, 0) / arr.length;
+  return arr.reduce((s, v) => s + Math.pow(v - mean, 2), 0) / arr.length;
 }
 
 // GET /api/portfolio/me
@@ -42,8 +68,10 @@ export async function getPortfolioData(req, res) {
     }
 
     const value = (pos.quantity || 0) * (pos.avgPrice || 0);
-    // Use actual changePercent from CSV or database if available
-    const changePercent = typeof pos.dayChangePct === 'number' ? pos.dayChangePct : 0;
+    // Prefer actual daily change percent if provided, else generate a realistic mock (-3%..+3%)
+    const changePercent = (typeof pos.dayChangePct === 'number' && !Number.isNaN(pos.dayChangePct))
+      ? Number(pos.dayChangePct)
+      : Number(((Math.random() - 0.5) * 6).toFixed(2));
 
     return {
       // core
@@ -66,24 +94,30 @@ export async function getPortfolioData(req, res) {
     percentage: totalValue ? Number(((h.value / totalValue) * 100).toFixed(2)) : 0
   }));
 
-  // Use actual performance history if available, else flat history
-  const performanceHistory = p.performanceHistory || {
-    '1M': Array(30).fill(totalValue),
-    '3M': Array(13).fill(totalValue),
-    '6M': Array(26).fill(totalValue),
-    '1Y': Array(52).fill(totalValue)
-  };
+  // Non-flat performance: use saved history if present else mock based on total value
+  const hasHistory = p.performanceHistory && Object.keys(p.performanceHistory || {}).length > 0;
+  const performanceHistory = hasHistory ? p.performanceHistory : mockPerformanceHistory(totalValue || 10000);
 
-  const valueChange = Number((holdings.reduce((s, h) => s + (h.value * h.changePercent / 100), 0)).toFixed(2));
-  const valueChangePercent = totalValue
-    ? Number(((valueChange / (totalValue - valueChange)) * 100).toFixed(2))
+  // Aggregate P/L
+  const valueChangeRaw = holdings.reduce((s, h) => s + (h.value * h.changePercent / 100), 0);
+  const valueChange = Number(valueChangeRaw.toFixed(2));
+  const denom = (totalValue - valueChange);
+  const valueChangePercent = denom !== 0 ? Number(((valueChange / denom) * 100).toFixed(2)) : 0;
+
+  // Simple risk score from dispersion and average abs change
+  const avgAbsChange = holdings.length
+    ? holdings.reduce((s, h) => s + Math.abs(h.changePercent), 0) / holdings.length
     : 0;
+  const weightVariance = variance(holdings.map(h => h.percentage || 0));
+  // Scale to 0-10 range to match frontend (was 0-100)
+  let riskScore = Math.min(10, Math.max(0, Math.round(avgAbsChange * 0.8 + Math.sqrt(weightVariance) * 0.2)));
+  if (Number.isNaN(riskScore)) riskScore = 0;
 
   res.json({
-    totalValue,
+    totalValue: Number(totalValue.toFixed(2)),
     valueChange,
     valueChangePercent,
-    riskScore: 5,
+    riskScore,
     performanceHistory,
     holdings
   });
@@ -200,6 +234,7 @@ export async function upsertPortfolio(req, res) {
     });
     res.status(201).json({ message: 'Created', id: p._id, imported: positions.length });
   } catch (e) {
+    console.error('Portfolio upsert error:', e);
     res.status(500).json({ message: e.message });
   }
 }
