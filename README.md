@@ -2,7 +2,6 @@
 
 A full‑stack investment portfolio and analytics application. OptiFolio combines a Flutter mobile app, a Node.js + MongoDB backend, and a Python RL service for portfolio rebalancing.
 
-> Drop your app screenshots into `Frontend/assets/images/` and they will render below. See “Adding Screenshots” for details.
 
 ---
 
@@ -34,18 +33,45 @@ OptiFolio helps you track your investments, view analytics, and get AI‑powered
 
 ## Screenshots
 
-<p align="center">
-  <img src="Frontend/assets/images/portfolio_screen.png" alt="Portfolio Screen" width="240" />
-  <img src="Frontend/assets/images/portfolio.png" alt="Portfolio" width="240" />
-  <img src="Frontend/assets/images/rebalance_screen.png" alt="Rebalance Screen" width="240" />
-  <img src="Frontend/assets/images/stock_screen.png" alt="Stock Screen" width="240" />
-</p>
-
-<p align="center">
-  <img src="Frontend/assets/images/chatbot.png" alt="Chatbot" width="240" />
-  <img src="Frontend/assets/images/analytics.png" alt="Analytics" width="240" />
-  <img src="Frontend/assets/images/news.png" alt="News" width="240" />
-</p>
+<!-- Centered, consistent grid for GitHub rendering -->
+<div align="center">
+  <table>
+    <tr>
+      <td align="center">
+        <img src="Frontend/assets/images/portfolio_screen.png" alt="Portfolio Overview" width="260" />
+        <br /><sub>Portfolio Overview</sub>
+      </td>
+      <td align="center">
+        <img src="Frontend/assets/images/portfolio.png" alt="Holdings" width="260" />
+        <br /><sub>Holdings</sub>
+      </td>
+      <td align="center">
+        <img src="Frontend/assets/images/rebalance_screen.png" alt="Rebalance" width="260" />
+        <br /><sub>Rebalance</sub>
+      </td>
+    </tr>
+    <tr>
+      <td align="center">
+        <img src="Frontend/assets/images/chatbot.png" alt="AI Assistant" width="260" />
+        <br /><sub>AI Assistant</sub>
+      </td>
+      <td align="center">
+        <img src="Frontend/assets/images/analytics.png" alt="Analytics" width="260" />
+        <br /><sub>Analytics</sub>
+      </td>
+      <td align="center">
+        <img src="Frontend/assets/images/news.png" alt="News & Alerts" width="260" />
+        <br /><sub>News & Alerts</sub>
+      </td>
+    </tr>
+    <tr>
+      <td align="center" colspan="3">
+        <img src="Frontend/assets/images/stock_screen.png" alt="Stock Details" width="300" />
+        <br /><sub>Stock Details</sub>
+      </td>
+    </tr>
+  </table>
+</div>
 
 ---
 
